@@ -26,14 +26,6 @@ const GYM_EXERCISES = [
   { id: 10, name: "Box jumps", category: "Plyometri", sets: 4, reps: "5", targetMuscle: "Explosivitet" },
 ];
 
-const COMPETITIONS = [
-  { date: "2026-04-11", name: "Serispel (hemma)", type: "series" },
-  { date: "2026-04-25", name: "RSL Tävling", type: "tournament" },
-  { date: "2026-05-09", name: "Seriespel (borta)", type: "series" },
-  { date: "2026-05-23", name: "Distriktsmästerskap", type: "tournament" },
-  { date: "2026-06-06", name: "USM", type: "tournament" },
-];
-
 function getWeekNumber(d) {
   d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
@@ -197,10 +189,20 @@ export default function BadmintonTrainingApp() {
   const [activeTab, setActiveTab] = useState("week");
   const [wellness, setWellness] = useState({});
   const [gymLog, setGymLog] = useState({});
+  const [competitions, setCompetitions] = useState([
+    { date: "2026-04-11", name: "Serispel (hemma)", type: "series" },
+    { date: "2026-04-25", name: "RSL Tävling", type: "tournament" },
+    { date: "2026-05-09", name: "Seriespel (borta)", type: "series" },
+    { date: "2026-05-23", name: "Distriktsmästerskap", type: "tournament" },
+    { date: "2026-06-06", name: "USM", type: "tournament" },
+  ]);
+  const [showAddComp, setShowAddComp] = useState(false);
+  const [newComp, setNewComp] = useState({ name: "", date: "", type: "tournament" });
   const [week, setWeek] = useState(DEFAULT_WEEK);
   const [isTaperWeek, setIsTaperWeek] = useState(false);
 
-  const nextComp = getNextCompetition(COMPETITIONS);
+  const sortedCompetitions = [...competitions].sort((a, b) => new Date(a.date) - new Date(b.date));
+  const nextComp = getNextCompetition(sortedCompetitions);
   const daysToComp = nextComp ? daysUntil(nextComp.date) : null;
 
   useEffect(() => {
@@ -478,14 +480,99 @@ export default function BadmintonTrainingApp() {
         {/* === CALENDAR TAB === */}
         {activeTab === "calendar" && (
           <div>
-            <div style={{ fontSize: "16px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>
-              Tävlingskalender
-            </div>
-            <div style={{ fontSize: "12px", color: "#666", marginBottom: "16px" }}>
-              Veckan innan tävling anpassas automatiskt
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+              <div>
+                <div style={{ fontSize: "16px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>
+                  Tävlingskalender
+                </div>
+                <div style={{ fontSize: "12px", color: "#666" }}>
+                  Veckan innan tävling anpassas automatiskt
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAddComp(!showAddComp)}
+                style={{
+                  width: "36px", height: "36px", borderRadius: "10px",
+                  border: "1px solid rgba(244,166,35,0.3)",
+                  background: showAddComp ? "rgba(244,166,35,0.15)" : "transparent",
+                  color: "#f4a623", fontSize: "20px", cursor: "pointer",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                }}
+              >
+                {showAddComp ? "×" : "+"}
+              </button>
             </div>
 
-            {COMPETITIONS.map((comp, i) => {
+            {showAddComp && (
+              <div style={{
+                background: "rgba(255,255,255,0.04)",
+                borderRadius: "12px",
+                padding: "14px",
+                marginBottom: "16px",
+                border: "1px solid rgba(244,166,35,0.15)",
+              }}>
+                <input
+                  type="text"
+                  placeholder="Namn (t.ex. RSL Tävling)"
+                  value={newComp.name}
+                  onChange={e => setNewComp({ ...newComp, name: e.target.value })}
+                  style={{
+                    width: "100%", padding: "10px 12px", borderRadius: "8px",
+                    border: "1px solid #333", background: "rgba(255,255,255,0.05)",
+                    color: "#e0e0e0", fontSize: "13px", marginBottom: "8px",
+                    fontFamily: "inherit", boxSizing: "border-box",
+                  }}
+                />
+                <input
+                  type="date"
+                  value={newComp.date}
+                  onChange={e => setNewComp({ ...newComp, date: e.target.value })}
+                  style={{
+                    width: "100%", padding: "10px 12px", borderRadius: "8px",
+                    border: "1px solid #333", background: "rgba(255,255,255,0.05)",
+                    color: "#e0e0e0", fontSize: "13px", marginBottom: "8px",
+                    fontFamily: "inherit", boxSizing: "border-box",
+                  }}
+                />
+                <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
+                  {[{ value: "tournament", label: "Tävling 🏆" }, { value: "series", label: "Seriespel 🏸" }].map(opt => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setNewComp({ ...newComp, type: opt.value })}
+                      style={{
+                        flex: 1, padding: "8px", borderRadius: "8px",
+                        border: "none", cursor: "pointer", fontSize: "12px",
+                        fontWeight: 600, fontFamily: "inherit",
+                        background: newComp.type === opt.value ? "rgba(244,166,35,0.2)" : "rgba(255,255,255,0.05)",
+                        color: newComp.type === opt.value ? "#f4a623" : "#666",
+                      }}
+                    >
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => {
+                    if (newComp.name && newComp.date) {
+                      setCompetitions([...competitions, { ...newComp }]);
+                      setNewComp({ name: "", date: "", type: "tournament" });
+                      setShowAddComp(false);
+                    }
+                  }}
+                  style={{
+                    width: "100%", padding: "10px", borderRadius: "8px",
+                    border: "none", cursor: "pointer", fontSize: "13px",
+                    fontWeight: 600, fontFamily: "inherit",
+                    background: newComp.name && newComp.date ? "#f4a623" : "rgba(255,255,255,0.05)",
+                    color: newComp.name && newComp.date ? "#000" : "#555",
+                  }}
+                >
+                  Lägg till
+                </button>
+              </div>
+            )}
+
+            {sortedCompetitions.map((comp, i) => {
               const d = daysUntil(comp.date);
               const isPast = d < 0;
               const isNext = comp === nextComp;
@@ -523,12 +610,25 @@ export default function BadmintonTrainingApp() {
                       {new Date(comp.date).toLocaleDateString("sv-SE", { weekday: "short", day: "numeric", month: "short" })}
                     </div>
                   </div>
-                  <div style={{
-                    fontSize: "12px",
-                    fontWeight: 600,
-                    color: isPast ? "#555" : d <= 7 ? "#f4a623" : "#666",
-                  }}>
-                    {isPast ? "Klar" : `${d}d`}
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                    <div style={{
+                      fontSize: "12px",
+                      fontWeight: 600,
+                      color: isPast ? "#555" : d <= 7 ? "#f4a623" : "#666",
+                    }}>
+                      {isPast ? "Klar" : `${d}d`}
+                    </div>
+                    <button
+                      onClick={() => setCompetitions(competitions.filter(c => c !== comp))}
+                      style={{
+                        width: "24px", height: "24px", borderRadius: "6px",
+                        border: "none", background: "rgba(231,76,60,0.1)",
+                        color: "#e74c3c", fontSize: "14px", cursor: "pointer",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}
+                    >
+                      ×
+                    </button>
                   </div>
                 </div>
               );
