@@ -1,5 +1,37 @@
 import { useState, useEffect } from "react";
 
+// === SUPABASE CONFIG ===
+var SUPABASE_URL = "https://amrsbdvlgblgsmluruxt.supabase.co";
+var SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFtcnNiZHZsZ2JsZ3NtbHVydXh0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4OTMxODksImV4cCI6MjA5MTQ2OTE4OX0.7CAFY-ePGEmeXhILk15ZLt7dCgbdsWvyJm-8HQBGENA";
+
+async function dbLoad(userId) {
+  try {
+    var res = await fetch(SUPABASE_URL + "/rest/v1/user_data?user_id=eq." + encodeURIComponent(userId) + "&select=*", {
+      headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY }
+    });
+    var data = await res.json();
+    if (data && data.length > 0) return data[0];
+    // Create empty row if not exists
+    await fetch(SUPABASE_URL + "/rest/v1/user_data", {
+      method: "POST",
+      headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify({ user_id: userId })
+    });
+    return null;
+  } catch (e) { console.error(e); return null; }
+}
+
+async function dbSave(userId, fields) {
+  try {
+    var body = Object.assign({}, fields, { updated_at: new Date().toISOString() });
+    await fetch(SUPABASE_URL + "/rest/v1/user_data?user_id=eq." + encodeURIComponent(userId), {
+      method: "PATCH",
+      headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY, "Content-Type": "application/json", Prefer: "return=minimal" },
+      body: JSON.stringify(body)
+    });
+  } catch (e) { console.error(e); }
+}
+
 var DAYS = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"];
 var TRAINING_TYPES = ["Teknik", "Fys", "Enbollsövningar", "Matchspel", "Multi", "Blandat"];
 var WELLNESS_LABELS = ["Sömn", "Muskeltrötthet", "Motivation", "Energi"];
@@ -48,8 +80,6 @@ function getDayIndex() { var d = new Date().getDay(); return d === 0 ? 6 : d - 1
 function getNextCompetition(comps) { var t = new Date(); t.setHours(0,0,0,0); return comps.find(function(c) { return new Date(c.date) >= t; }); }
 function daysUntil(ds) { var t = new Date(); t.setHours(0,0,0,0); return Math.ceil((new Date(ds) - t) / 86400000); }
 function genId() { return Math.random().toString(36).substr(2, 9); }
-function load(k, fb) { try { var d = localStorage.getItem("bta_" + k); return d ? JSON.parse(d) : fb; } catch(e) { return fb; } }
-function save(k, v) { try { localStorage.setItem("bta_" + k, JSON.stringify(v)); } catch(e) {} }
 
 var inp = { width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #333", background: "rgba(255,255,255,0.05)", color: "#e0e0e0", fontSize: "13px", fontFamily: "inherit", boxSizing: "border-box" };
 function pill(a, c) { c = c || "#f4a623"; return { flex: 1, padding: "8px 4px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "11px", fontWeight: 600, fontFamily: "inherit", background: a ? c + "22" : "rgba(255,255,255,0.05)", color: a ? c : "#666", transition: "all 0.15s ease" }; }
@@ -105,13 +135,15 @@ function GymLog(p) {
 }
 
 export default function BadmintonTrainingApp() {
+  var _u = useState(function() { try { return localStorage.getItem("bta_userId") || ""; } catch (e) { return ""; } }), userId = _u[0], setUserId = _u[1];
+  var _li = useState(false), loaded = _li[0], setLoaded = _li[1];
   var _at = useState("week"), activeTab = _at[0], setActiveTab = _at[1];
-  var _co = useState(function() { return load("comps", DEFAULT_COMPETITIONS); }), competitions = _co[0], setCompetitions = _co[1];
-  var _wo = useState(function() { return load("weekOv", {}); }), weekOv = _wo[0], setWeekOv = _wo[1];
-  var _tl = useState(function() { return load("tLogs", {}); }), tLogs = _tl[0], setTLogs = _tl[1];
-  var _wl = useState(function() { return load("wLogs", {}); }), wLogs = _wl[0], setWLogs = _wl[1];
-  var _gl = useState(function() { return load("gLogs", {}); }), gLogs = _gl[0], setGLogs = _gl[1];
-  var _ml = useState(function() { return load("mLogs", {}); }), mLogs = _ml[0], setMLogs = _ml[1];
+  var _co = useState(DEFAULT_COMPETITIONS), competitions = _co[0], setCompetitions = _co[1];
+  var _wo = useState({}), weekOv = _wo[0], setWeekOv = _wo[1];
+  var _tl = useState({}), tLogs = _tl[0], setTLogs = _tl[1];
+  var _wl = useState({}), wLogs = _wl[0], setWLogs = _wl[1];
+  var _gl = useState({}), gLogs = _gl[0], setGLogs = _gl[1];
+  var _ml = useState({}), mLogs = _ml[0], setMLogs = _ml[1];
 
   var _sac = useState(false), showAddComp = _sac[0], setShowAddComp = _sac[1];
   var _nc = useState({ name: "", date: "", type: "tournament" }), newComp = _nc[0], setNewComp = _nc[1];
@@ -125,6 +157,78 @@ export default function BadmintonTrainingApp() {
   var _sf = useState("week"), statsFilter = _sf[0], setStatsFilter = _sf[1];
   var _cd = useState({ from: "", to: "" }), customDates = _cd[0], setCustomDates = _cd[1];
   var _st = useState("badminton"), statsTab = _st[0], setStatsTab = _st[1];
+  var _ln = useState(""), loginName = _ln[0], setLoginName = _ln[1];
+  var _sy = useState(false), syncing = _sy[0], setSyncing = _sy[1];
+
+  // Load from Supabase on login
+  useEffect(function() {
+    if (!userId) { setLoaded(true); return; }
+    setLoaded(false);
+    dbLoad(userId).then(function(data) {
+      if (data) {
+        if (data.competitions && data.competitions.length > 0) setCompetitions(data.competitions);
+        if (data.week_overrides) setWeekOv(data.week_overrides);
+        if (data.training_logs) setTLogs(data.training_logs);
+        if (data.wellness_logs) setWLogs(data.wellness_logs);
+        if (data.gym_logs) setGLogs(data.gym_logs);
+        if (data.match_logs) setMLogs(data.match_logs);
+      }
+      setLoaded(true);
+    });
+  }, [userId]);
+
+  // Save to Supabase whenever data changes (debounced)
+  useEffect(function() {
+    if (!userId || !loaded) return;
+    setSyncing(true);
+    var t = setTimeout(function() {
+      dbSave(userId, {
+        competitions: competitions,
+        week_overrides: weekOv,
+        training_logs: tLogs,
+        wellness_logs: wLogs,
+        gym_logs: gLogs,
+        match_logs: mLogs,
+      }).then(function() { setSyncing(false); });
+    }, 800);
+    return function() { clearTimeout(t); };
+  }, [competitions, weekOv, tLogs, wLogs, gLogs, mLogs, userId, loaded]);
+
+  function handleLogin() {
+    if (!loginName.trim()) return;
+    var clean = loginName.trim().toLowerCase().replace(/\s+/g, "_");
+    try { localStorage.setItem("bta_userId", clean); } catch (e) {}
+    setUserId(clean);
+  }
+
+  function handleLogout() {
+    try { localStorage.removeItem("bta_userId"); } catch (e) {}
+    setUserId("");
+    setCompetitions(DEFAULT_COMPETITIONS); setWeekOv({}); setTLogs({}); setWLogs({}); setGLogs({}); setMLogs({});
+  }
+
+  // Login screen
+  if (!userId) {
+    return (
+      <div style={{ fontFamily: "'JetBrains Mono','SF Mono',monospace", background: "#0d0d12", color: "#e0e0e0", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
+        <div style={{ maxWidth: "320px", width: "100%" }}>
+          <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "3px", color: "#555", marginBottom: "8px", textAlign: "center" }}>Badminton Performance</div>
+          <div style={{ fontSize: "28px", fontWeight: 700, color: "#fff", textAlign: "center", marginBottom: "30px" }}>Logga in 🏸</div>
+          <div style={{ fontSize: "12px", color: "#888", marginBottom: "10px", textAlign: "center" }}>Skriv samma användarnamn på alla enheter för att se samma data</div>
+          <input type="text" placeholder="Användarnamn" value={loginName} onChange={function(e) { setLoginName(e.target.value); }} onKeyDown={function(e) { if (e.key === "Enter") handleLogin(); }} style={Object.assign({}, inp, { marginBottom: "12px", textAlign: "center", fontSize: "16px", padding: "14px" })} />
+          <button onClick={handleLogin} style={{ width: "100%", padding: "14px", borderRadius: "10px", border: "none", background: loginName.trim() ? "#f4a623" : "rgba(255,255,255,0.05)", color: loginName.trim() ? "#000" : "#555", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Logga in</button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!loaded) {
+    return (
+      <div style={{ fontFamily: "'JetBrains Mono','SF Mono',monospace", background: "#0d0d12", color: "#e0e0e0", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ color: "#666" }}>Laddar...</div>
+      </div>
+    );
+  }
 
   var today = getTodayStr(), weekId = getWeekId(new Date()), weekNum = getWeekNumber(new Date()), todayIdx = getDayIndex();
   var sortedComps = competitions.slice().sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
@@ -145,13 +249,6 @@ export default function BadmintonTrainingApp() {
   var wCnt = WELLNESS_LABELS.filter(function(l) { return todayW[l]; }).length;
   var wAvg = wCnt > 0 ? WELLNESS_LABELS.reduce(function(s, l) { return s + (todayW[l] || 0); }, 0) / wCnt : 0;
   var todayGym = gLogs[today] || {};
-
-  useEffect(function() { save("comps", competitions); }, [competitions]);
-  useEffect(function() { save("weekOv", weekOv); }, [weekOv]);
-  useEffect(function() { save("tLogs", tLogs); }, [tLogs]);
-  useEffect(function() { save("wLogs", wLogs); }, [wLogs]);
-  useEffect(function() { save("gLogs", gLogs); }, [gLogs]);
-  useEffect(function() { save("mLogs", mLogs); }, [mLogs]);
 
   function setSessStatus(di, sid, status) {
     var key = weekId + "-" + di;
@@ -218,11 +315,14 @@ export default function BadmintonTrainingApp() {
   return (
     <div style={{ fontFamily: "'JetBrains Mono','SF Mono','Fira Code',monospace", background: "#0d0d12", color: "#e0e0e0", minHeight: "100vh", maxWidth: "480px", margin: "0 auto", position: "relative", paddingBottom: "80px" }}>
 
-      {/* Header */}
       <div style={{ padding: "24px 20px 16px", background: "linear-gradient(180deg,#14141e 0%,#0d0d12 100%)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
-            <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "3px", color: "#555", marginBottom: "4px" }}>Badminton Performance</div>
+            <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "3px", color: "#555", marginBottom: "4px", display: "flex", alignItems: "center", gap: "8px" }}>
+              <span>{userId}</span>
+              {syncing && <span style={{ color: "#3498db" }}>● synkar</span>}
+              <button onClick={handleLogout} style={{ padding: "1px 6px", borderRadius: "3px", border: "1px solid #333", background: "transparent", color: "#666", fontSize: "9px", cursor: "pointer", fontFamily: "inherit" }}>Logga ut</button>
+            </div>
             <div style={{ fontSize: "26px", fontWeight: 700, color: "#fff" }}>Vecka {weekNum}</div>
           </div>
           {nextComp && (
@@ -244,7 +344,6 @@ export default function BadmintonTrainingApp() {
 
       <div style={{ padding: "16px 20px" }}>
 
-        {/* WEEK */}
         {activeTab === "week" && (
           <div>
             <LoadBar value={actSess} max={10} label="Totalbelastning" color="#3498db" />
@@ -303,7 +402,6 @@ export default function BadmintonTrainingApp() {
           </div>
         )}
 
-        {/* LOG */}
         {activeTab === "log" && (
           <div>
             <div style={{ marginBottom: "20px" }}>
@@ -377,7 +475,6 @@ export default function BadmintonTrainingApp() {
           </div>
         )}
 
-        {/* STATS */}
         {activeTab === "stats" && (function() {
           var allTLogs = Object.values(tLogs);
           var allMLogs = Object.values(mLogs);
@@ -400,7 +497,6 @@ export default function BadmintonTrainingApp() {
             <div>
               <div style={{ fontSize: "16px", fontWeight: 700, color: "#fff", marginBottom: "10px" }}>Statistik</div>
 
-              {/* Period filter */}
               <div style={{ display: "flex", gap: "4px", marginBottom: "12px", flexWrap: "wrap" }}>
                 {[{ v: "week", l: "Vecka" }, { v: "month", l: "Månad" }, { v: "year", l: "År" }, { v: "custom", l: "Anpassad" }].map(function(f) {
                   return <button key={f.v} onClick={function() { setStatsFilter(f.v); }} style={Object.assign({}, pill(statsFilter === f.v), { flex: "0 0 auto", padding: "6px 12px" })}>{f.l}</button>;
@@ -413,14 +509,12 @@ export default function BadmintonTrainingApp() {
                 </div>
               )}
 
-              {/* Stats tabs */}
               <div style={{ display: "flex", gap: "4px", marginBottom: "16px" }}>
                 {[{ v: "badminton", l: "Badminton", c: "#2ecc71" }, { v: "gym", l: "Gym", c: "#f4a623" }, { v: "series", l: "Seriespel", c: "#3498db" }, { v: "tournament", l: "Tävlingar", c: "#e74c3c" }].map(function(t) {
                   return <button key={t.v} onClick={function() { setStatsTab(t.v); }} style={Object.assign({}, pill(statsTab === t.v, t.c), { fontSize: "10px", padding: "6px 4px" })}>{t.l}</button>;
                 })}
               </div>
 
-              {/* Badminton stats */}
               {statsTab === "badminton" && (
                 <div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "16px" }}>
@@ -455,7 +549,6 @@ export default function BadmintonTrainingApp() {
                 </div>
               )}
 
-              {/* Gym stats */}
               {statsTab === "gym" && (
                 <div>
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "16px" }}>
@@ -472,7 +565,6 @@ export default function BadmintonTrainingApp() {
                 </div>
               )}
 
-              {/* Series stats */}
               {statsTab === "series" && (function() {
                 var ms = matchStats(seriesMatches);
                 return (
@@ -516,7 +608,6 @@ export default function BadmintonTrainingApp() {
                 );
               })()}
 
-              {/* Tournament stats */}
               {statsTab === "tournament" && (function() {
                 var ms = matchStats(tournMatches);
                 return (
@@ -563,7 +654,6 @@ export default function BadmintonTrainingApp() {
           );
         })()}
 
-        {/* CALENDAR */}
         {activeTab === "calendar" && (
           <div>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
@@ -620,21 +710,17 @@ export default function BadmintonTrainingApp() {
               );
             })}
 
-            {/* Match logging modal */}
             {showMatch && (
               <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }} onClick={function() { setShowMatch(null); }}>
                 <div onClick={function(e) { e.stopPropagation(); }} style={{ background: "#1a1a24", borderRadius: "16px", padding: "20px", width: "100%", maxWidth: "360px", maxHeight: "80vh", overflowY: "auto" }}>
                   <div style={{ fontSize: "15px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Logga match</div>
                   <div style={{ fontSize: "11px", color: "#666", marginBottom: "14px" }}>{showMatch.name} — {new Date(showMatch.date).toLocaleDateString("sv-SE")}</div>
-
                   <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px" }}>Typ av match</div>
                   <div style={{ display: "flex", gap: "6px", marginBottom: "14px" }}>
                     {MATCH_TYPES.map(function(t) { return <button key={t} onClick={function() { setMatchForm(Object.assign({}, matchForm, { matchType: t })); }} style={pill(matchForm.matchType === t, "#3498db")}>{t}</button>; })}
                   </div>
-
                   <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px" }}>Motståndare</div>
                   <input type="text" placeholder="Namn (valfritt)" value={matchForm.opponent} onChange={function(e) { setMatchForm(Object.assign({}, matchForm, { opponent: e.target.value })); }} style={Object.assign({}, inp, { marginBottom: "14px" })} />
-
                   <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px" }}>Set (bäst av 3)</div>
                   {[0, 1, 2].map(function(si) {
                     return (<div key={si} style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "6px" }}>
@@ -646,13 +732,11 @@ export default function BadmintonTrainingApp() {
                         style={{ width: "60px", padding: "6px", borderRadius: "6px", border: "1px solid #333", background: "rgba(255,255,255,0.05)", color: "#ccc", fontSize: "13px", textAlign: "center" }} />
                     </div>);
                   })}
-
                   <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px", marginTop: "10px" }}>Resultat</div>
                   <div style={{ display: "flex", gap: "6px", marginBottom: "14px" }}>
                     <button onClick={function() { setMatchForm(Object.assign({}, matchForm, { won: true })); }} style={pill(matchForm.won === true, "#2ecc71")}>Vinst ✓</button>
                     <button onClick={function() { setMatchForm(Object.assign({}, matchForm, { won: false })); }} style={pill(matchForm.won === false, "#e74c3c")}>Förlust ✗</button>
                   </div>
-
                   <button onClick={saveMatch} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "none", background: matchForm.won !== null ? "#2ecc71" : "rgba(255,255,255,0.05)", color: matchForm.won !== null ? "#000" : "#555", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Spara match</button>
                 </div>
               </div>
@@ -661,7 +745,6 @@ export default function BadmintonTrainingApp() {
         )}
       </div>
 
-      {/* Nav */}
       <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: "480px", background: "rgba(13,13,18,0.95)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", padding: "8px 16px", paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}>
         {tabs.map(function(t) {
           return (<button key={t.id} onClick={function() { setActiveTab(t.id); }} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "8px 0", background: "transparent", border: "none", cursor: "pointer" }}>
