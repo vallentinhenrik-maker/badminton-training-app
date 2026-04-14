@@ -159,6 +159,7 @@ export default function BadmintonTrainingApp() {
   var _st = useState("badminton"), statsTab = _st[0], setStatsTab = _st[1];
   var _ln = useState(""), loginName = _ln[0], setLoginName = _ln[1];
   var _sy = useState(false), syncing = _sy[0], setSyncing = _sy[1];
+  var _vl = useState(null), viewLog = _vl[0], setViewLog = _vl[1];
 
   // Load from Supabase on login
   useEffect(function() {
@@ -377,14 +378,22 @@ export default function BadmintonTrainingApp() {
                       var status = getSessionStatus(i, s.id);
                       var stColor = status === "done" ? "#2ecc71" : status === "cancelled" ? "#e74c3c" : "#3498db";
                       var stLabel = status === "done" ? "Genomfört" : status === "cancelled" ? "Inställt" : "Planerat";
+                      var dayDate = getDateForDayIndex(i);
+                      var logKey = dayDate + "-" + s.id;
+                      var logEntry = tLogs[logKey];
                       return (
                         <div key={s.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 10px", borderRadius: "8px", marginBottom: "4px", background: "rgba(255,255,255,0.03)" }}>
                           <div style={{ width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0, background: s.type === "badminton" ? "#2ecc71" : "#f4a623" }} />
                           <div style={{ flex: 1, fontSize: "13px", color: status === "cancelled" ? "#666" : "#ccc", textDecoration: status === "cancelled" ? "line-through" : "none" }}>{s.label}</div>
                           {s.time ? <div style={{ fontSize: "11px", color: "#555" }}>{s.time}</div> : null}
                           <button onClick={function() {
-                            if (status === "cancelled") setSessStatus(i, s.id, "planned");
-                            else if (status === "planned") setSessStatus(i, s.id, "cancelled");
+                            if (status === "done" && logEntry) {
+                              setViewLog(Object.assign({}, logEntry, { displayDate: dayDate }));
+                            } else if (status === "cancelled") {
+                              setSessStatus(i, s.id, "planned");
+                            } else if (status === "planned") {
+                              setSessStatus(i, s.id, "cancelled");
+                            }
                           }} style={{ padding: "3px 8px", borderRadius: "4px", border: "none", background: stColor + "18", color: stColor, fontSize: "10px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", minWidth: "70px", textAlign: "center" }}>
                             {stLabel}
                           </button>
@@ -409,6 +418,44 @@ export default function BadmintonTrainingApp() {
                 </div>
               </div>
             )}
+          </div>
+        )}
+
+        {/* View log modal */}
+        {viewLog && (
+          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }} onClick={function() { setViewLog(null); }}>
+            <div onClick={function(e) { e.stopPropagation(); }} style={{ background: "#1a1a24", borderRadius: "16px", padding: "20px", width: "100%", maxWidth: "360px", maxHeight: "80vh", overflowY: "auto" }}>
+              <div style={{ fontSize: "15px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>{viewLog.sessionLabel}</div>
+              <div style={{ fontSize: "11px", color: "#666", marginBottom: "14px" }}>{new Date(viewLog.displayDate || viewLog.date).toLocaleDateString("sv-SE", { weekday: "long", day: "numeric", month: "long" })}</div>
+
+              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "4px" }}>Status</div>
+              <div style={{ fontSize: "14px", color: viewLog.completed === "yes" ? "#2ecc71" : viewLog.completed === "partial" ? "#f4a623" : "#e74c3c", marginBottom: "12px", fontWeight: 600 }}>
+                {viewLog.completed === "yes" ? "✓ Genomfört" : viewLog.completed === "partial" ? "~ Delvis" : "✗ Inte genomfört"}
+              </div>
+
+              {viewLog.trainingType && (<div>
+                <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "4px" }}>Typ av träning</div>
+                <div style={{ fontSize: "14px", color: "#3498db", marginBottom: "12px", fontWeight: 600 }}>{viewLog.trainingType}</div>
+              </div>)}
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
+                <div>
+                  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "4px" }}>Egen insats</div>
+                  <div style={{ fontSize: "22px", fontWeight: 700, color: viewLog.rating >= 4 ? "#2ecc71" : viewLog.rating >= 3 ? "#f4a623" : "#e74c3c" }}>{viewLog.rating || "—"}<span style={{ fontSize: "12px", color: "#555" }}>/5</span></div>
+                </div>
+                <div>
+                  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "4px" }}>Energinivå</div>
+                  <div style={{ fontSize: "22px", fontWeight: 700, color: viewLog.energy >= 4 ? "#2ecc71" : viewLog.energy >= 3 ? "#f4a623" : "#e74c3c" }}>{viewLog.energy || "—"}<span style={{ fontSize: "12px", color: "#555" }}>/5</span></div>
+                </div>
+              </div>
+
+              {viewLog.note && (<div>
+                <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "4px" }}>Anteckning</div>
+                <div style={{ fontSize: "13px", color: "#ccc", background: "rgba(255,255,255,0.04)", padding: "10px", borderRadius: "8px", marginBottom: "12px", fontStyle: "italic" }}>{viewLog.note}</div>
+              </div>)}
+
+              <button onClick={function() { setViewLog(null); }} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#888", fontSize: "13px", cursor: "pointer", fontFamily: "inherit", marginTop: "8px" }}>Stäng</button>
+            </div>
           </div>
         )}
 
@@ -657,6 +704,43 @@ export default function BadmintonTrainingApp() {
                       })}
                     </div>)}
                     {ms.total === 0 && <div style={{ textAlign: "center", padding: "30px 0", color: "#555", fontSize: "13px" }}>Inga tävlingsmatcher för vald period</div>}
+                  </div>
+                );
+              })()}
+
+              {/* Latest logged sessions */}
+              {(function() {
+                var filteredLogs = filterByPeriod(Object.values(tLogs), "date");
+                var typeMatch = statsTab === "badminton" ? "badminton" : statsTab === "gym" ? "gym" : null;
+                var latestLogs = typeMatch ? filteredLogs.filter(function(l) { return l.sessionType === typeMatch; }) : [];
+                latestLogs = latestLogs.sort(function(a, b) { return new Date(b.date) - new Date(a.date); }).slice(0, 15);
+                if (latestLogs.length === 0) return null;
+                return (
+                  <div style={{ marginTop: "24px" }}>
+                    <div style={{ fontSize: "12px", fontWeight: 600, color: "#aaa", marginBottom: "8px" }}>Senaste loggade pass</div>
+                    {latestLogs.map(function(log, i) {
+                      return (
+                        <div key={i} onClick={function() { setViewLog(log); }} style={{
+                          display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", marginBottom: "4px", borderRadius: "8px",
+                          background: "rgba(255,255,255,0.03)", cursor: "pointer",
+                        }}>
+                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0, background: log.sessionType === "badminton" ? "#2ecc71" : "#f4a623" }} />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ fontSize: "12px", color: "#e0e0e0", fontWeight: 500 }}>{log.sessionLabel}</div>
+                            <div style={{ fontSize: "10px", color: "#666" }}>
+                              {new Date(log.date).toLocaleDateString("sv-SE", { weekday: "short", day: "numeric", month: "short" })}
+                              {log.trainingType ? " — " + log.trainingType : ""}
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                            {log.rating > 0 && <span style={{ fontSize: "11px", color: "#f4a623" }}>★{log.rating}</span>}
+                            <span style={{ fontSize: "11px", color: log.completed === "yes" ? "#2ecc71" : log.completed === "partial" ? "#f4a623" : "#e74c3c" }}>
+                              {log.completed === "yes" ? "✓" : log.completed === "partial" ? "~" : "✗"}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 );
               })()}
