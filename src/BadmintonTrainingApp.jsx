@@ -323,7 +323,7 @@ export default function BadmintonTrainingApp() {
   ];
 
   return (
-    <div style={{ fontFamily: "'JetBrains Mono','SF Mono','Fira Code',monospace", background: "#0d0d12", color: "#e0e0e0", minHeight: "100vh", maxWidth: "480px", margin: "0 auto", position: "relative", paddingBottom: "80px" }}>
+    <div style={{ fontFamily: "'JetBrains Mono','SF Mono','Fira Code',monospace", background: "#0d0d12", color: "#e0e0e0", minHeight: "100vh", maxWidth: "600px", width: "100%", margin: "0 auto", position: "relative", paddingBottom: "80px" }}>
 
       <div style={{ padding: "24px 20px 16px", background: "linear-gradient(180deg,#14141e 0%,#0d0d12 100%)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -755,7 +755,7 @@ export default function BadmintonTrainingApp() {
         )}
       </div>
 
-      <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: "480px", background: "rgba(13,13,18,0.95)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", padding: "8px 16px", paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}>
+      <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: "600px", background: "rgba(13,13,18,0.95)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", padding: "8px 16px", paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}>
         {tabs.map(function(t) {
           return (<button key={t.id} onClick={function() { setActiveTab(t.id); }} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "8px 0", background: "transparent", border: "none", cursor: "pointer" }}>
             <span style={{ fontSize: "20px", filter: activeTab === t.id ? "none" : "grayscale(1) opacity(0.4)" }}>{t.icon}</span>
