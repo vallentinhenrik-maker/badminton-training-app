@@ -278,8 +278,18 @@ export default function BadmintonTrainingApp() {
     setShowMatch(null); setMatchForm({ matchType: "Singel", won: null, sets: [{ my: "", opp: "" }, { my: "", opp: "" }, { my: "", opp: "" }], opponent: "" });
   }
 
+  function getDateForDayIndex(dayIdx) {
+    var now = new Date();
+    var currentDayIdx = getDayIndex();
+    var diff = dayIdx - currentDayIdx;
+    var d = new Date(now);
+    d.setDate(now.getDate() + diff);
+    return d.toISOString().split("T")[0];
+  }
+
   function getSessionStatus(di, sid) {
-    var key = today + "-" + sid;
+    var dayDate = getDateForDayIndex(di);
+    var key = dayDate + "-" + sid;
     if (tLogs[key]) return "done";
     var dayData = weekOv[weekId + "-" + di] || curWeek[di].sessions;
     var sess = dayData.find(function(s) { return s.id === sid; });
