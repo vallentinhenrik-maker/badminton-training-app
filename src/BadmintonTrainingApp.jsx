@@ -261,6 +261,20 @@ export default function BadmintonTrainingApp() {
     setWeekOv(Object.assign({}, weekOv, { [key]: ss }));
   }
 
+  function removeSess(di, sid) {
+    var key = weekId + "-" + di;
+    var ss = (weekOv[key] || curWeek[di].sessions).filter(function(s) { return s.id !== sid; });
+    setWeekOv(Object.assign({}, weekOv, { [key]: ss }));
+    // Also remove any logged entry for this session in this week
+    var dayDate = getDateForDayIndex(di);
+    var logKey = dayDate + "-" + sid;
+    if (tLogs[logKey]) {
+      var newLogs = Object.assign({}, tLogs);
+      delete newLogs[logKey];
+      setTLogs(newLogs);
+    }
+  }
+
   function addSess(di) {
     if (!newSess.label) return;
     var key = weekId + "-" + di;
@@ -403,6 +417,11 @@ export default function BadmintonTrainingApp() {
                           }} style={{ padding: "3px 8px", borderRadius: "4px", border: "none", background: stColor + "18", color: stColor, fontSize: "10px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", minWidth: "70px", textAlign: "center" }}>
                             {stLabel}
                           </button>
+                          <button onClick={function() {
+                            if (window.confirm("Vill du ta bort detta pass från " + day.day + "?")) {
+                              removeSess(i, s.id);
+                            }
+                          }} title="Ta bort pass" style={{ padding: "3px 6px", borderRadius: "4px", border: "none", background: "rgba(231,76,60,0.08)", color: "#e74c3c", fontSize: "12px", cursor: "pointer", fontFamily: "inherit" }}>×</button>
                         </div>
                       );
                     })}
