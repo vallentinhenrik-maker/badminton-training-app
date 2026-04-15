@@ -33,7 +33,7 @@ async function dbSave(userId, fields) {
 }
 
 var DAYS = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"];
-var TRAINING_TYPES = ["Teknik", "Fys", "Enbollsövningar", "Matchspel", "Multi", "Blandat"];
+var TRAINING_TYPES = ["Teknik", "Fys", "Enbollsövningar", "Matchspel", "Multi", "Flackt spel", "Teori", "Blandat"];
 var WELLNESS_LABELS = ["Sömn", "Muskeltrötthet", "Motivation", "Energi"];
 var MATCH_TYPES = ["Singel", "Dubbel", "Mixed"];
 
@@ -58,6 +58,9 @@ var GYM_EXERCISES = [
   { id: 8, name: "Planka variationer", category: "Core", sets: 3, reps: "30-45s", targetMuscle: "Stabilitet" },
   { id: 9, name: "Enbensstående rodd", category: "Rygg", sets: 3, reps: "10/sida", targetMuscle: "Balans + rygg" },
   { id: 10, name: "Box jumps", category: "Plyometri", sets: 4, reps: "5", targetMuscle: "Explosivitet" },
+  { id: 11, name: "Pullups", category: "Överkropp", sets: 4, reps: "Max", targetMuscle: "Rygg/biceps" },
+  { id: 12, name: "Armhävningar", category: "Överkropp", sets: 3, reps: "Max", targetMuscle: "Bröst/triceps" },
+  { id: 13, name: "Nordic hamstrings", category: "Ben", sets: 3, reps: "5-8", targetMuscle: "Hamstrings (excentriskt)" },
 ];
 
 var DEFAULT_COMPETITIONS = [
@@ -151,12 +154,13 @@ export default function BadmintonTrainingApp() {
   var _asd = useState(0), addSessDay = _asd[0], setAddSessDay = _asd[1];
   var _ns = useState({ label: "", time: "", type: "badminton" }), newSess = _ns[0], setNewSess = _ns[1];
   var _ls = useState(null), logSess = _ls[0], setLogSess = _ls[1];
-  var _lf = useState({ completed: "yes", trainingType: "", rating: 0, energy: 0, note: "" }), logForm = _lf[0], setLogForm = _lf[1];
+  var _lf = useState({ completed: "yes", trainingType: [], rating: 0, energy: 0, note: "" }), logForm = _lf[0], setLogForm = _lf[1];
   var _sm = useState(null), showMatch = _sm[0], setShowMatch = _sm[1];
   var _mf = useState({ matchType: "Singel", won: null, sets: [{ my: "", opp: "" }, { my: "", opp: "" }, { my: "", opp: "" }], opponent: "" }), matchForm = _mf[0], setMatchForm = _mf[1];
   var _sf = useState("week"), statsFilter = _sf[0], setStatsFilter = _sf[1];
   var _cd = useState({ from: "", to: "" }), customDates = _cd[0], setCustomDates = _cd[1];
   var _st = useState("badminton"), statsTab = _st[0], setStatsTab = _st[1];
+  var _ld = useState(getTodayStr()), logDate = _ld[0], setLogDate = _ld[1];
   var _ln = useState(""), loginName = _ln[0], setLoginName = _ln[1];
   var _sy = useState(false), syncing = _sy[0], setSyncing = _sy[1];
   var _vl = useState(null), viewLog = _vl[0], setViewLog = _vl[1];
@@ -267,9 +271,11 @@ export default function BadmintonTrainingApp() {
 
   function saveTLog() {
     if (!logSess) return;
-    var key = today + "-" + logSess.id;
-    setTLogs(Object.assign({}, tLogs, { [key]: Object.assign({}, logForm, { sessionId: logSess.id, sessionLabel: logSess.label, sessionType: logSess.type, date: today, weekId: weekId }) }));
-    setLogSess(null); setLogForm({ completed: "yes", trainingType: "", rating: 0, energy: 0, note: "" });
+    var saveDate = logSess._logDate || today;
+    var saveWeekId = getWeekId(new Date(saveDate));
+    var key = saveDate + "-" + logSess.id;
+    setTLogs(Object.assign({}, tLogs, { [key]: Object.assign({}, logForm, { sessionId: logSess.id, sessionLabel: logSess.label, sessionType: logSess.type, date: saveDate, weekId: saveWeekId }) }));
+    setLogSess(null); setLogForm({ completed: "yes", trainingType: [], rating: 0, energy: 0, note: "" });
   }
 
   function saveMatch() {
@@ -433,10 +439,17 @@ export default function BadmintonTrainingApp() {
                 {viewLog.completed === "yes" ? "✓ Genomfört" : viewLog.completed === "partial" ? "~ Delvis" : "✗ Inte genomfört"}
               </div>
 
-              {viewLog.trainingType && (<div>
-                <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "4px" }}>Typ av träning</div>
-                <div style={{ fontSize: "14px", color: "#3498db", marginBottom: "12px", fontWeight: 600 }}>{viewLog.trainingType}</div>
-              </div>)}
+              {(function() {
+                var tt = viewLog.trainingType;
+                var ttArr = Array.isArray(tt) ? tt : (tt ? [tt] : []);
+                if (ttArr.length === 0) return null;
+                return (<div>
+                  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "4px" }}>Typ av träning</div>
+                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "12px" }}>
+                    {ttArr.map(function(t) { return <span key={t} style={{ fontSize: "12px", color: "#3498db", background: "rgba(52,152,219,0.15)", padding: "3px 8px", borderRadius: "5px", fontWeight: 600 }}>{t}</span>; })}
+                  </div>
+                </div>);
+              })()}
 
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
                 <div>
@@ -461,54 +474,86 @@ export default function BadmintonTrainingApp() {
 
         {activeTab === "log" && (
           <div>
-            <div style={{ marginBottom: "20px" }}>
-              <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Daglig avstämning</div>
-              <div style={{ fontSize: "11px", color: "#666", marginBottom: "10px" }}>1 = dåligt, 5 = topp</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
-                {WELLNESS_LABELS.map(function(label) {
-                  return (<div key={label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: "8px", padding: "10px" }}>
-                    <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px" }}>{label}</div>
-                    <div style={{ display: "flex", gap: "3px" }}>
-                      {[1,2,3,4,5].map(function(v) { return <button key={v} onClick={function() { var u = Object.assign({}, wLogs); u[today] = Object.assign({}, todayW, {[label]: v}); setWLogs(u); }} style={ratBtn(todayW[label] === v, v)}>{v}</button>; })}
-                    </div>
-                  </div>);
-                })}
-              </div>
-              {wAvg > 0 && wAvg < 3 && (<div style={{ marginTop: "8px", background: "rgba(231,76,60,0.1)", border: "1px solid rgba(231,76,60,0.2)", borderRadius: "8px", padding: "8px 10px", fontSize: "11px", color: "#e74c3c" }}>💡 Överväg lättare pass idag.</div>)}
+            {/* Date selector */}
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", background: "rgba(255,255,255,0.03)", padding: "10px 12px", borderRadius: "10px" }}>
+              <div style={{ fontSize: "11px", color: "#8a8a9a", textTransform: "uppercase", letterSpacing: "1px" }}>Dag att logga</div>
+              <input type="date" value={logDate} max={today} onChange={function(e) { setLogDate(e.target.value); }}
+                style={{ flex: 1, padding: "6px 8px", borderRadius: "6px", border: "1px solid #333", background: "rgba(255,255,255,0.05)", color: "#e0e0e0", fontSize: "12px", fontFamily: "inherit" }} />
+              {logDate !== today && (
+                <button onClick={function() { setLogDate(today); }} style={{ padding: "4px 10px", borderRadius: "5px", border: "1px solid rgba(244,166,35,0.3)", background: "transparent", color: "#f4a623", fontSize: "10px", cursor: "pointer", fontFamily: "inherit", fontWeight: 600 }}>Idag</button>
+              )}
             </div>
 
-            <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Dagens pass</div>
-            <div style={{ fontSize: "11px", color: "#666", marginBottom: "10px" }}>Klicka för att logga</div>
-            {curWeek[todayIdx].sessions.filter(function(s) { return s.type !== "rest" && !s.cancelled; }).map(function(sess) {
-              var lk = today + "-" + sess.id, logged = tLogs[lk];
-              return (<div key={sess.id} onClick={function() { if (!logged) { setLogSess(sess); setLogForm({ completed: "yes", trainingType: "", rating: 0, energy: 0, note: "" }); } }} style={{
-                display: "flex", alignItems: "center", gap: "10px", padding: "12px", marginBottom: "6px", borderRadius: "10px",
-                background: logged ? "rgba(46,204,113,0.08)" : "rgba(255,255,255,0.03)",
-                border: logged ? "1px solid rgba(46,204,113,0.25)" : "1px solid rgba(255,255,255,0.06)", cursor: logged ? "default" : "pointer",
-              }}>
-                <div style={{ width: "10px", height: "10px", borderRadius: "50%", flexShrink: 0, background: sess.type === "badminton" ? "#2ecc71" : "#f4a623" }} />
-                <div style={{ flex: 1 }}><div style={{ fontSize: "13px", color: "#e0e0e0", fontWeight: 500 }}>{sess.label}</div><div style={{ fontSize: "11px", color: "#666" }}>{sess.time}</div></div>
-                {logged ? (<div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ fontSize: "11px", color: "#2ecc71" }}>✓ Loggat</span>{logged.rating > 0 && <span style={{ fontSize: "11px", color: "#f4a623" }}>★{logged.rating}</span>}</div>) : (<div style={{ fontSize: "11px", color: "#f4a623" }}>Logga →</div>)}
+            {(function() {
+              var selDate = new Date(logDate);
+              var selDayJs = selDate.getDay();
+              var selDayIdx = selDayJs === 0 ? 6 : selDayJs - 1;
+              var selWeekId = getWeekId(selDate);
+              var selDayOverride = weekOv[selWeekId + "-" + selDayIdx];
+              var selDaySessions = selDayOverride || DEFAULT_WEEK[selDayIdx].sessions;
+              var isLogToday = logDate === today;
+
+              return (<div>
+                {isLogToday && (
+                  <div style={{ marginBottom: "20px" }}>
+                    <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Daglig avstämning</div>
+                    <div style={{ fontSize: "11px", color: "#666", marginBottom: "10px" }}>1 = dåligt, 5 = topp</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                      {WELLNESS_LABELS.map(function(label) {
+                        return (<div key={label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: "8px", padding: "10px" }}>
+                          <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px" }}>{label}</div>
+                          <div style={{ display: "flex", gap: "3px" }}>
+                            {[1,2,3,4,5].map(function(v) { return <button key={v} onClick={function() { var u = Object.assign({}, wLogs); u[today] = Object.assign({}, todayW, {[label]: v}); setWLogs(u); }} style={ratBtn(todayW[label] === v, v)}>{v}</button>; })}
+                          </div>
+                        </div>);
+                      })}
+                    </div>
+                    {wAvg > 0 && wAvg < 3 && (<div style={{ marginTop: "8px", background: "rgba(231,76,60,0.1)", border: "1px solid rgba(231,76,60,0.2)", borderRadius: "8px", padding: "8px 10px", fontSize: "11px", color: "#e74c3c" }}>💡 Överväg lättare pass idag.</div>)}
+                  </div>
+                )}
+
+                <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>{isLogToday ? "Dagens pass" : "Pass " + new Date(logDate).toLocaleDateString("sv-SE", { weekday: "long", day: "numeric", month: "long" })}</div>
+                <div style={{ fontSize: "11px", color: "#666", marginBottom: "10px" }}>Klicka för att logga eller se detaljer</div>
+                {selDaySessions.filter(function(s) { return s.type !== "rest" && !s.cancelled; }).map(function(sess) {
+                  var lk = logDate + "-" + sess.id, logged = tLogs[lk];
+                  return (<div key={sess.id} onClick={function() {
+                    if (logged) { setViewLog(Object.assign({}, logged, { displayDate: logDate })); }
+                    else { setLogSess(Object.assign({}, sess, { _logDate: logDate })); setLogForm({ completed: "yes", trainingType: [], rating: 0, energy: 0, note: "" }); }
+                  }} style={{
+                    display: "flex", alignItems: "center", gap: "10px", padding: "12px", marginBottom: "6px", borderRadius: "10px",
+                    background: logged ? "rgba(46,204,113,0.08)" : "rgba(255,255,255,0.03)",
+                    border: logged ? "1px solid rgba(46,204,113,0.25)" : "1px solid rgba(255,255,255,0.06)", cursor: "pointer",
+                  }}>
+                    <div style={{ width: "10px", height: "10px", borderRadius: "50%", flexShrink: 0, background: sess.type === "badminton" ? "#2ecc71" : "#f4a623" }} />
+                    <div style={{ flex: 1 }}><div style={{ fontSize: "13px", color: "#e0e0e0", fontWeight: 500 }}>{sess.label}</div><div style={{ fontSize: "11px", color: "#666" }}>{sess.time}</div></div>
+                    {logged ? (<div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ fontSize: "11px", color: "#2ecc71" }}>✓ Loggat</span>{logged.rating > 0 && <span style={{ fontSize: "11px", color: "#f4a623" }}>★{logged.rating}</span>}</div>) : (<div style={{ fontSize: "11px", color: "#f4a623" }}>Logga →</div>)}
+                  </div>);
+                })}
+
+                {selDaySessions.some(function(s) { return s.type === "gym" && !s.cancelled; }) && isLogToday && (
+                  <div style={{ marginTop: "16px" }}>
+                    <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Gympass</div>
+                    <div style={{ fontSize: "11px", color: "#666", marginBottom: "10px" }}>{isTaper ? "⚡ Tävlingsvecka: 60% vikt" : "Logga vikter"}</div>
+                    <GymLog exercises={GYM_EXERCISES} log={todayGym} setLog={function(fn) { var u = typeof fn === "function" ? fn(todayGym) : fn; var g = Object.assign({}, gLogs); g[today] = u; setGLogs(g); }} />
+                  </div>
+                )}
+
+                {selDaySessions.every(function(s) { return s.type === "rest" || s.cancelled; }) && (
+                  <div style={{ textAlign: "center", padding: "30px 0", color: "#555", fontSize: "13px" }}>Vilodag 🧘</div>
+                )}
               </div>);
-            })}
-
-            {curWeek[todayIdx].sessions.some(function(s) { return s.type === "gym" && !s.cancelled; }) && (
-              <div style={{ marginTop: "16px" }}>
-                <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Gympass</div>
-                <div style={{ fontSize: "11px", color: "#666", marginBottom: "10px" }}>{isTaper ? "⚡ Tävlingsvecka: 60% vikt" : "Logga vikter"}</div>
-                <GymLog exercises={GYM_EXERCISES} log={todayGym} setLog={function(fn) { var u = typeof fn === "function" ? fn(todayGym) : fn; var g = Object.assign({}, gLogs); g[today] = u; setGLogs(g); }} />
-              </div>
-            )}
-
-            {curWeek[todayIdx].sessions.every(function(s) { return s.type === "rest" || s.cancelled; }) && (
-              <div style={{ textAlign: "center", padding: "30px 0", color: "#555", fontSize: "13px" }}>Vilodag 🧘</div>
-            )}
+            })()}
 
             {logSess && (
               <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }} onClick={function() { setLogSess(null); }}>
                 <div onClick={function(e) { e.stopPropagation(); }} style={{ background: "#1a1a24", borderRadius: "16px", padding: "20px", width: "100%", maxWidth: "360px", maxHeight: "80vh", overflowY: "auto" }}>
                   <div style={{ fontSize: "15px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Logga: {logSess.label}</div>
-                  <div style={{ fontSize: "11px", color: "#666", marginBottom: "14px" }}>{logSess.time}</div>
+                  <div style={{ fontSize: "11px", color: "#666", marginBottom: "14px" }}>
+                    {logSess.time}
+                    {logSess._logDate && logSess._logDate !== today && (
+                      <span style={{ color: "#f4a623", marginLeft: "8px" }}>• {new Date(logSess._logDate).toLocaleDateString("sv-SE", { weekday: "short", day: "numeric", month: "short" })}</span>
+                    )}
+                  </div>
                   <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px" }}>Blev passet av?</div>
                   <div style={{ display: "flex", gap: "6px", marginBottom: "14px" }}>
                     {[{ v: "yes", l: "Ja" }, { v: "partial", l: "Delvis" }, { v: "no", l: "Nej" }].map(function(o) { return <button key={o.v} onClick={function() { setLogForm(Object.assign({}, logForm, { completed: o.v })); }} style={pill(logForm.completed === o.v, o.v === "yes" ? "#2ecc71" : o.v === "partial" ? "#f4a623" : "#e74c3c")}>{o.l}</button>; })}
@@ -516,7 +561,14 @@ export default function BadmintonTrainingApp() {
                   {logSess.type === "badminton" && (<div>
                     <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px" }}>Typ av träning</div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "14px" }}>
-                      {TRAINING_TYPES.map(function(t) { return <button key={t} onClick={function() { setLogForm(Object.assign({}, logForm, { trainingType: t })); }} style={Object.assign({}, pill(logForm.trainingType === t, "#3498db"), { flex: "0 0 auto", padding: "6px 12px" })}>{t}</button>; })}
+                      {TRAINING_TYPES.map(function(t) {
+                        var ttArr = Array.isArray(logForm.trainingType) ? logForm.trainingType : (logForm.trainingType ? [logForm.trainingType] : []);
+                        var selected = ttArr.indexOf(t) !== -1;
+                        return <button key={t} onClick={function() {
+                          var newArr = selected ? ttArr.filter(function(x) { return x !== t; }) : ttArr.concat([t]);
+                          setLogForm(Object.assign({}, logForm, { trainingType: newArr }));
+                        }} style={Object.assign({}, pill(selected, "#3498db"), { flex: "0 0 auto", padding: "6px 12px" })}>{t}</button>;
+                      })}
                     </div>
                   </div>)}
                   <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px" }}>Egen insats</div>
@@ -586,7 +638,11 @@ export default function BadmintonTrainingApp() {
                     })}
                   </div>
                   {(function() {
-                    var tc = {}; badLogs.forEach(function(l) { if (l.trainingType) tc[l.trainingType] = (tc[l.trainingType]||0) + 1; });
+                    var tc = {}; badLogs.forEach(function(l) {
+                      var tt = l.trainingType;
+                      var ttArr = Array.isArray(tt) ? tt : (tt ? [tt] : []);
+                      ttArr.forEach(function(t) { tc[t] = (tc[t]||0) + 1; });
+                    });
                     var total = Object.values(tc).reduce(function(s,c) { return s+c; }, 0);
                     if (total === 0) return null;
                     return (<div style={{ marginBottom: "16px" }}>
@@ -729,7 +785,11 @@ export default function BadmintonTrainingApp() {
                             <div style={{ fontSize: "12px", color: "#e0e0e0", fontWeight: 500 }}>{log.sessionLabel}</div>
                             <div style={{ fontSize: "10px", color: "#666" }}>
                               {new Date(log.date).toLocaleDateString("sv-SE", { weekday: "short", day: "numeric", month: "short" })}
-                              {log.trainingType ? " — " + log.trainingType : ""}
+                              {(function() {
+                                var tt = log.trainingType;
+                                var ttArr = Array.isArray(tt) ? tt : (tt ? [tt] : []);
+                                return ttArr.length > 0 ? " — " + ttArr.join(", ") : "";
+                              })()}
                             </div>
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
