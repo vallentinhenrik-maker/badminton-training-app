@@ -467,6 +467,15 @@ export default function BadmintonTrainingApp() {
                 <div style={{ fontSize: "13px", color: "#ccc", background: "rgba(255,255,255,0.04)", padding: "10px", borderRadius: "8px", marginBottom: "12px", fontStyle: "italic" }}>{viewLog.note}</div>
               </div>)}
 
+              <button onClick={function() {
+                if (window.confirm("Vill du verkligen ta bort denna logg?")) {
+                  var keyToRemove = (viewLog.displayDate || viewLog.date) + "-" + viewLog.sessionId;
+                  var newLogs = Object.assign({}, tLogs);
+                  delete newLogs[keyToRemove];
+                  setTLogs(newLogs);
+                  setViewLog(null);
+                }
+              }} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid rgba(231,76,60,0.3)", background: "rgba(231,76,60,0.08)", color: "#e74c3c", fontSize: "13px", cursor: "pointer", fontFamily: "inherit", marginTop: "8px", fontWeight: 600 }}>Ta bort logg</button>
               <button onClick={function() { setViewLog(null); }} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#888", fontSize: "13px", cursor: "pointer", fontFamily: "inherit", marginTop: "8px" }}>Stäng</button>
             </div>
           </div>
