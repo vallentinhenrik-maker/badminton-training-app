@@ -606,7 +606,7 @@ export default function BadmintonTrainingApp() {
           var gymLogs2 = fTLogs.filter(function(l) { return l.sessionType === "gym"; });
           var seriesM = fMLogs.filter(function(l) { return l.compType === "series"; });
           var tournM = fMLogs.filter(function(l) { return l.compType === "tournament"; });
-          function ms(matches) { var w = matches.filter(function(m){return m.won===true;}).length; return { total: matches.length, won: w, lost: matches.filter(function(m){return m.won===false;}).length, byType: MATCH_TYPES.reduce(function(o,t){ o[t] = matches.filter(function(m){return m.matchType===t;}); return o; }, {}) }; }
+          function ms(matches) { var w = matches.filter(function(m){return m.won===true || m.won==="true";}).length; return { total: matches.length, won: w, lost: matches.filter(function(m){return m.won===false || m.won==="false";}).length, byType: MATCH_TYPES.reduce(function(o,t){ o[t] = matches.filter(function(m){return m.matchType===t;}); return o; }, {}) }; }
           return (
             <div>
               <div style={sectionTitle}>Statistik</div>
@@ -658,7 +658,7 @@ export default function BadmintonTrainingApp() {
                     <StatCard label="Vinster" value={mst.won} color={C.green} />
                     <StatCard label="Förluster" value={mst.lost} color={C.red} />
                   </div>
-                  {MATCH_TYPES.map(function(mt) { var m = mst.byType[mt]; if (m.length === 0) return null; var w = m.filter(function(x){return x.won;}).length;
+                  {MATCH_TYPES.map(function(mt) { var m = mst.byType[mt]; if (m.length === 0) return null; var w = m.filter(function(x){return x.won===true||x.won==="true";}).length;
                     return (<div key={mt} style={{ marginBottom: "10px" }}><div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: C.textSecondary, marginBottom: "4px" }}><span>{mt}</span><span>{w}V / {m.length-w}F</span></div>
                       <div style={{ height: "6px", background: C.bgElevated, borderRadius: "3px", overflow: "hidden" }}><div style={{ width: (m.length>0?(w/m.length*100):0)+"%", height: "100%", background: C.green, borderRadius: "3px" }} /></div></div>);
                   })}
