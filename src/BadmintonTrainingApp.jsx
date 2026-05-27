@@ -609,13 +609,13 @@ export default function BadmintonTrainingApp() {
               var allLogs = allLogsF; var cards = [];
 
               // Sleep vs Performance
-              var slD = { g: [], b: [] }; allLogs.forEach(function(l) { var dw = gwfd(l.date); if (dw && dw["S\u00f6mn"]) { if (dw["S\u00f6mn"] >= 4) slD.g.push(l); else if (dw["S\u00f6mn"] <= 2) slD.b.push(l); } });
+              var slD = { g: [], b: [] }; allLogs.forEach(function(l) { var dw = gwfd(l.date); if (dw && dw["S\u00f6mn"]) { if (dw["S\u00f6mn"] >= 4) slD.g.push(l); else if (dw["S\u00f6mn"] <= 3) slD.b.push(l); } });
               var slM = slD.g.length + slD.b.length;
               if (slD.g.length >= 2 && slD.b.length >= 1) {
                 var gR = slD.g.reduce(function(s,l){return s+(l.rating||0);},0)/slD.g.length; var bR = slD.b.reduce(function(s,l){return s+(l.rating||0);},0)/slD.b.length;
                 var gE = slD.g.reduce(function(s,l){return s+(l.energy||0);},0)/slD.g.length; var bE = slD.b.reduce(function(s,l){return s+(l.energy||0);},0)/slD.b.length;
-                cards.push({ icon: "\ud83d\ude34", title: "S\u00f6mn vs Prestation", body: "Bra s\u00f6mn (4-5): insats " + gR.toFixed(1) + ", energi " + gE.toFixed(1) + " (" + slD.g.length + " pass). D\u00e5lig s\u00f6mn (1-2): insats " + bR.toFixed(1) + ", energi " + bE.toFixed(1) + " (" + slD.b.length + " pass).", highlight: (gR-bR>0.3||gE-bE>0.3) ? "Bra s\u00f6mn ger" + (gR-bR>0.3?" +"+(gR-bR).toFixed(1)+" insats":"") + (gR-bR>0.3&&gE-bE>0.3?" och":"") + (gE-bE>0.3?" +"+(gE-bE).toFixed(1)+" energi":"") + "!" : "S\u00f6mnen verkar inte p\u00e5verka prestationen.", color: (gR-bR>0.3||gE-bE>0.3) ? C.green : C.textMuted });
-              } else { cards.push({ icon: "\ud83d\ude34", title: "S\u00f6mn vs Prestation", body: "S\u00f6mndata matchad f\u00f6r " + slM + " av " + allLogs.length + " pass. Fyll i s\u00f6mn i daglig avst\u00e4mning.", highlight: "Beh\u00f6ver minst 2 pass med bra s\u00f6mn (4-5) och 1 med d\u00e5lig (1-2).", color: C.textMuted }); }
+                cards.push({ icon: "\ud83d\ude34", title: "S\u00f6mn vs Prestation", body: "Bra s\u00f6mn (4-5): insats " + gR.toFixed(1) + ", energi " + gE.toFixed(1) + " (" + slD.g.length + " pass). D\u00e5lig s\u00f6mn (1-3): insats " + bR.toFixed(1) + ", energi " + bE.toFixed(1) + " (" + slD.b.length + " pass).", highlight: (gR-bR>0.3||gE-bE>0.3) ? "Bra s\u00f6mn ger" + (gR-bR>0.3?" +"+(gR-bR).toFixed(1)+" insats":"") + (gR-bR>0.3&&gE-bE>0.3?" och":"") + (gE-bE>0.3?" +"+(gE-bE).toFixed(1)+" energi":"") + "!" : "S\u00f6mnen verkar inte p\u00e5verka prestationen.", color: (gR-bR>0.3||gE-bE>0.3) ? C.green : C.textMuted });
+              } else { cards.push({ icon: "\ud83d\ude34", title: "S\u00f6mn vs Prestation", body: "S\u00f6mndata matchad f\u00f6r " + slM + " av " + allLogs.length + " pass. Fyll i s\u00f6mn i daglig avst\u00e4mning.", highlight: "Beh\u00f6ver minst 2 pass med bra s\u00f6mn (4-5) och 1 med d\u00e5lig (1-3).", color: C.textMuted }); }
 
               // Single vs Double sessions
               var dsc = {}; allLogs.forEach(function(l) { if (!dsc[l.date]) dsc[l.date] = []; dsc[l.date].push(l); });
