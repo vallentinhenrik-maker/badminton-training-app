@@ -617,8 +617,8 @@ export default function BadmintonTrainingApp() {
                 <input type="date" value={customDates.from} onChange={function(e) { setCustomDates(Object.assign({}, customDates, { from: e.target.value })); }} style={Object.assign({}, inputStyle, { fontSize: "13px" })} />
                 <input type="date" value={customDates.to} onChange={function(e) { setCustomDates(Object.assign({}, customDates, { to: e.target.value })); }} style={Object.assign({}, inputStyle, { fontSize: "13px" })} />
               </div>)}
-              <div style={{ display: "flex", gap: "6px", marginBottom: "20px" }}>
-                {[{ v: "badminton", l: "Badminton", c: C.green }, { v: "gym", l: "Gym", c: C.accent }, { v: "series", l: "Seriespel", c: C.blue }, { v: "tournament", l: "Tävlingar", c: C.red }].map(function(t) { return <button key={t.v} onClick={function() { setStatsTab(t.v); }} style={Object.assign({}, chipStyle(statsTab === t.v, t.c), { fontSize: "12px" })}>{t.l}</button>; })}
+              <div style={{ display: "flex", gap: "6px", marginBottom: "20px", flexWrap: "wrap" }}>
+                {[{ v: "badminton", l: "Badminton", c: C.green }, { v: "gym", l: "Gym", c: C.accent }, { v: "series", l: "Seriespel", c: C.blue }, { v: "tournament", l: "Tävlingar", c: C.red }, { v: "insights", l: "Insikter", c: C.purple }].map(function(t) { return <button key={t.v} onClick={function() { setStatsTab(t.v); }} style={Object.assign({}, chipStyle(statsTab === t.v, t.c), { fontSize: "12px" })}>{t.l}</button>; })}
               </div>
 
               {statsTab === "badminton" && (<div>
@@ -669,6 +669,184 @@ export default function BadmintonTrainingApp() {
                         <div style={{ fontSize: "14px", fontWeight: 700, color: m.won ? C.green : C.red }}>{m.won ? "V" : "F"}</div></div>);
                     })}</div>)}
                   {mst.total === 0 && <div style={{ textAlign: "center", padding: "40px 0", color: C.textDim, fontSize: "14px" }}>Inga {statsTab === "series" ? "seriematcher" : "tävlingsmatcher"} för vald period</div>}
+                </div>);
+              })()}
+
+              {/* INSIGHTS TAB */}
+              {statsTab === "insights" && (function() {
+                var allLogs = Object.values(tLogs);
+                var allWellness = Object.entries(wLogs);
+                if (allLogs.length < 3) return (<div style={{ textAlign: "center", padding: "40px 0", color: C.textDim, fontSize: "14px" }}>Behöver minst 3 loggade pass för insikter</div>);
+
+                var insightCards = [];
+
+                // 1. Sleep vs performance
+                var sleepData = { good: [], bad: [] };
+                allLogs.forEach(function(log) {
+                  var dayWellness = wLogs[log.date];
+                  if (dayWellness && dayWellness["Sömn"]) {
+                    if (dayWellness["Sömn"] >= 4) sleepData.good.push(log);
+                    else if (dayWellness["Sömn"] <= 2) sleepData.bad.push(log);
+                  }
+                });
+                if (sleepData.good.length >= 2 && sleepData.bad.length >= 1) {
+                  var goodAvg = sleepData.good.reduce(function(s,l){return s+(l.rating||0);},0) / sleepData.good.length;
+                  var badAvg = sleepData.bad.reduce(function(s,l){return s+(l.rating||0);},0) / sleepData.bad.length;
+                  var diff = goodAvg - badAvg;
+                  insightCards.push({
+                    icon: "😴", title: "Sömn vs Insats",
+                    body: "Vid bra sömn (4-5): snittinsats " + goodAvg.toFixed(1) + ". Vid dålig sömn (1-2): snittinsats " + badAvg.toFixed(1) + ".",
+                    highlight: diff > 0.3 ? "Bra sömn ger +" + diff.toFixed(1) + " i insats!" : "Sömnen verkar inte påverka insatsen nämnvärt.",
+                    color: diff > 0.3 ? C.green : C.textMuted,
+                  });
+                }
+
+                // 2. Double session days vs single
+                var daySessionCounts = {};
+                allLogs.forEach(function(log) {
+                  if (!daySessionCounts[log.date]) daySessionCounts[log.date] = [];
+                  daySessionCounts[log.date].push(log);
+                });
+                var singleDays = [], doubleDays = [];
+                Object.values(daySessionCounts).forEach(function(logs) {
+                  if (logs.length === 1) singleDays.push(logs[0]);
+                  else if (logs.length >= 2) logs.forEach(function(l) { doubleDays.push(l); });
+                });
+                if (singleDays.length >= 2 && doubleDays.length >= 2) {
+                  var singleAvgR = singleDays.reduce(function(s,l){return s+(l.rating||0);},0) / singleDays.length;
+                  var doubleAvgR = doubleDays.reduce(function(s,l){return s+(l.rating||0);},0) / doubleDays.length;
+                  var singleAvgE = singleDays.reduce(function(s,l){return s+(l.energy||0);},0) / singleDays.length;
+                  var doubleAvgE = doubleDays.reduce(function(s,l){return s+(l.energy||0);},0) / doubleDays.length;
+                  insightCards.push({
+                    icon: "📊", title: "Enkelpass vs Dubbelpass-dagar",
+                    body: "Enkelpass: insats " + singleAvgR.toFixed(1) + ", energi " + singleAvgE.toFixed(1) + ". Dubbelpass: insats " + doubleAvgR.toFixed(1) + ", energi " + doubleAvgE.toFixed(1) + ".",
+                    highlight: doubleAvgE < singleAvgE - 0.3 ? "Energin sjunker med " + (singleAvgE - doubleAvgE).toFixed(1) + " på dubbelpass-dagar" : "Energin håller bra även på dubbelpass-dagar!",
+                    color: doubleAvgE < singleAvgE - 0.3 ? C.yellow : C.green,
+                  });
+                }
+
+                // 3. Best/worst weekday
+                var dayStats = {};
+                allLogs.forEach(function(log) {
+                  var d = new Date(log.date);
+                  var dayIdx = d.getDay() === 0 ? 6 : d.getDay() - 1;
+                  var dayName = DAYS[dayIdx];
+                  if (!dayStats[dayName]) dayStats[dayName] = { ratings: [], energies: [] };
+                  if (log.rating) dayStats[dayName].ratings.push(log.rating);
+                  if (log.energy) dayStats[dayName].energies.push(log.energy);
+                });
+                var dayEntries = Object.entries(dayStats).filter(function(e) { return e[1].ratings.length >= 2; });
+                if (dayEntries.length >= 3) {
+                  dayEntries.sort(function(a, b) {
+                    var aAvg = a[1].ratings.reduce(function(s,v){return s+v;},0) / a[1].ratings.length;
+                    var bAvg = b[1].ratings.reduce(function(s,v){return s+v;},0) / b[1].ratings.length;
+                    return bAvg - aAvg;
+                  });
+                  var bestDay = dayEntries[0];
+                  var worstDay = dayEntries[dayEntries.length - 1];
+                  var bestAvg = bestDay[1].ratings.reduce(function(s,v){return s+v;},0) / bestDay[1].ratings.length;
+                  var worstAvg = worstDay[1].ratings.reduce(function(s,v){return s+v;},0) / worstDay[1].ratings.length;
+                  insightCards.push({
+                    icon: "📅", title: "Bästa & sämsta dag",
+                    body: "Bäst: " + bestDay[0] + " (snitt " + bestAvg.toFixed(1) + "). Sämst: " + worstDay[0] + " (snitt " + worstAvg.toFixed(1) + ").",
+                    highlight: bestAvg - worstAvg > 0.5 ? bestDay[0] + "ar ger " + (bestAvg - worstAvg).toFixed(1) + " högre insats!" : "Insatsen är relativt jämn alla dagar.",
+                    color: bestAvg - worstAvg > 0.5 ? C.blue : C.textMuted,
+                  });
+
+                  // Day breakdown bars
+                  insightCards.push({
+                    icon: null, title: null, type: "dayChart",
+                    data: dayEntries.map(function(e) {
+                      return { day: e[0], avg: e[1].ratings.reduce(function(s,v){return s+v;},0) / e[1].ratings.length, count: e[1].ratings.length };
+                    }),
+                  });
+                }
+
+                // 4. Training type vs rating
+                var typeRatings = {};
+                allLogs.forEach(function(log) {
+                  var tt = Array.isArray(log.trainingType) ? log.trainingType : (log.trainingType ? [log.trainingType] : []);
+                  tt.forEach(function(t) {
+                    if (!typeRatings[t]) typeRatings[t] = [];
+                    if (log.rating) typeRatings[t].push(log.rating);
+                  });
+                });
+                var typeEntries = Object.entries(typeRatings).filter(function(e) { return e[1].length >= 2; });
+                if (typeEntries.length >= 2) {
+                  typeEntries.sort(function(a, b) {
+                    return (b[1].reduce(function(s,v){return s+v;},0)/b[1].length) - (a[1].reduce(function(s,v){return s+v;},0)/a[1].length);
+                  });
+                  var bestType = typeEntries[0];
+                  var bestTypeAvg = bestType[1].reduce(function(s,v){return s+v;},0) / bestType[1].length;
+                  insightCards.push({
+                    icon: "🏸", title: "Träningstyp vs Insats",
+                    body: "Högst snittinsats: " + bestType[0] + " (" + bestTypeAvg.toFixed(1) + "/5, " + bestType[1].length + " pass).",
+                    highlight: "Du presterar bäst på " + bestType[0] + "-pass!",
+                    color: C.green,
+                  });
+                }
+
+                // 5. Low energy warning
+                var recentLogs = allLogs.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).slice(0, 5);
+                var lowEnergyCount = recentLogs.filter(function(l) { return (l.energy || 0) <= 2; }).length;
+                if (lowEnergyCount >= 3) {
+                  insightCards.push({
+                    icon: "⚠️", title: "Belastningsvarning",
+                    body: lowEnergyCount + " av de senaste 5 passen hade låg energi (1-2).",
+                    highlight: "Överväg extra vila eller lättare pass kommande dagar.",
+                    color: C.red,
+                  });
+                }
+
+                // 6. Fatigue vs motivation correlation
+                var fatigueData = { highFatigue: [], lowFatigue: [] };
+                allLogs.forEach(function(log) {
+                  var dayW = wLogs[log.date];
+                  if (dayW && dayW["Muskeltrötthet"]) {
+                    if (dayW["Muskeltrötthet"] <= 2) fatigueData.highFatigue.push(log);
+                    else if (dayW["Muskeltrötthet"] >= 4) fatigueData.lowFatigue.push(log);
+                  }
+                });
+                if (fatigueData.highFatigue.length >= 2 && fatigueData.lowFatigue.length >= 2) {
+                  var hfRating = fatigueData.highFatigue.reduce(function(s,l){return s+(l.rating||0);},0) / fatigueData.highFatigue.length;
+                  var lfRating = fatigueData.lowFatigue.reduce(function(s,l){return s+(l.rating||0);},0) / fatigueData.lowFatigue.length;
+                  insightCards.push({
+                    icon: "💪", title: "Muskeltrötthet vs Insats",
+                    body: "Utvilad (4-5): insats " + lfRating.toFixed(1) + ". Trött (1-2): insats " + hfRating.toFixed(1) + ".",
+                    highlight: lfRating - hfRating > 0.3 ? "Vila ger +" + (lfRating - hfRating).toFixed(1) + " i insats!" : "Du presterar bra även när du är trött!",
+                    color: lfRating - hfRating > 0.3 ? C.green : C.blue,
+                  });
+                }
+
+                if (insightCards.length === 0) return (<div style={{ textAlign: "center", padding: "40px 0", color: C.textDim, fontSize: "14px" }}>Logga fler pass och fyll i daglig avstämning för att se insikter</div>);
+
+                return (<div>
+                  {insightCards.map(function(card, i) {
+                    if (card.type === "dayChart") {
+                      return (<div key={i} style={Object.assign({}, cardStyle, { marginBottom: "12px" })}>
+                        <div style={Object.assign({}, labelStyle, { marginBottom: "12px" })}>Insats per veckodag</div>
+                        <div style={{ display: "flex", gap: "6px", alignItems: "flex-end", height: "90px" }}>
+                          {card.data.map(function(d) {
+                            var h = Math.max((d.avg / 5) * 75, 8);
+                            var barColor = d.avg >= 4 ? C.green : d.avg >= 3 ? C.accent : C.red;
+                            return (<div key={d.day} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px" }}>
+                              <div style={{ fontSize: "11px", color: C.textSecondary, fontWeight: 600 }}>{d.avg.toFixed(1)}</div>
+                              <div style={{ width: "100%", height: h + "px", borderRadius: "4px 4px 0 0", background: barColor, transition: "height 0.5s" }} />
+                              <div style={{ fontSize: "10px", color: C.textMuted }}>{d.day}</div>
+                            </div>);
+                          })}
+                        </div>
+                      </div>);
+                    }
+                    return (<div key={i} style={Object.assign({}, cardStyle, { marginBottom: "12px" })}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "8px" }}>
+                        {card.icon && <span style={{ fontSize: "20px" }}>{card.icon}</span>}
+                        <div style={{ fontSize: "15px", fontWeight: 600, color: C.text }}>{card.title}</div>
+                      </div>
+                      <div style={{ fontSize: "14px", color: C.textSecondary, lineHeight: 1.6, marginBottom: "8px" }}>{card.body}</div>
+                      <div style={{ fontSize: "14px", fontWeight: 600, color: card.color, lineHeight: 1.5 }}>{card.highlight}</div>
+                    </div>);
+                  })}
                 </div>);
               })()}
 
