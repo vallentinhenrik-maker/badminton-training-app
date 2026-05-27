@@ -215,6 +215,85 @@ export default function BadmintonTrainingApp() {
   var _ln = useState(""), loginName = _ln[0], setLoginName = _ln[1];
   var _sy = useState(false), syncing = _sy[0], setSyncing = _sy[1];
   var _vl = useState(null), viewLog = _vl[0], setViewLog = _vl[1];
+  var _mp = useState(null), motivMsg = _mp[0], setMotivMsg = _mp[1];
+
+  // --- Motivation calculations ---
+  function getStreak() {
+    var allLogs = Object.values(tLogs);
+    if (allLogs.length === 0) return 0;
+    var dates = {}; allLogs.forEach(function(l) { if (l.completed === "yes" || l.completed === "partial") dates[l.date] = true; });
+    var streak = 0;
+    var d = new Date(); d.setHours(0,0,0,0);
+    // Check if today has a log, if not start from yesterday
+    var todayStr = d.toISOString().split("T")[0];
+    if (!dates[todayStr]) { d.setDate(d.getDate() - 1); }
+    while (true) {
+      var ds = d.toISOString().split("T")[0];
+      var dayJs = d.getDay();
+      var dayIdx = dayJs === 0 ? 6 : dayJs - 1;
+      // Check if this day has sessions scheduled (not a rest day)
+      var daySessions = DEFAULT_WEEK[dayIdx].sessions;
+      var hasActiveSessions = daySessions.some(function(s) { return s.type !== "rest"; });
+      if (hasActiveSessions) {
+        if (dates[ds]) { streak++; } else { break; }
+      }
+      // Skip rest days (don't break streak)
+      d.setDate(d.getDate() - 1);
+      if (streak > 365) break; // safety
+    }
+    return streak;
+  }
+
+  function getMilestone(totalLogs) {
+    var milestones = [10, 25, 50, 75, 100, 150, 200, 300, 500];
+    for (var i = milestones.length - 1; i >= 0; i--) {
+      if (totalLogs === milestones[i]) return milestones[i];
+    }
+    return null;
+  }
+
+  function getMotivationMessage(form) {
+    var msgs = [];
+    if (form.rating >= 4 && form.energy >= 4) {
+      msgs = ["Otroligt pass! Du var helt on fire 🔥", "Topp-prestanda! Kroppen och viljan levererade 💪", "Starkt jobbat! Att ha både energi och insats på topp är sällsynt ⭐"];
+    } else if (form.rating >= 4) {
+      msgs = ["Riktigt bra insats! Du gav allt idag 💪", "Stark mental insats — det är sånt som bygger mästare 🏆", "Grym inställning på passet! Fortsätt så 🔥"];
+    } else if (form.energy >= 4) {
+      msgs = ["Bra energi idag! Kroppen var redo 💚", "Fint att kroppen mår bra — utnyttja det! ⚡"];
+    } else if (form.rating >= 3 || form.energy >= 3) {
+      msgs = ["Bra jobbat att genomföra passet! Varje pass räknas 👊", "Solid träning — konsistens slår allt annat 📈", "Du dök upp och gav det du hade. Det är det som räknas ✓"];
+    } else if (form.completed === "yes") {
+      msgs = ["Bra att du genomförde passet trots att det var tungt 💙", "Att träna på en tuff dag visar karaktär. Vila ordentligt ikväll 🌙", "De tyngsta passen bygger mest mental styrka 🧠"];
+    } else if (form.completed === "partial") {
+      msgs = ["Bra att du loggade — att lyssna på kroppen är också smart 🧘", "Ibland är ett halvt pass bättre än inget. Bra val! 👍"];
+    } else {
+      msgs = ["Tack för att du loggade. Vila är också en del av träningen 💤", "Ibland behöver kroppen en paus. Du kommer tillbaka starkare 💪"];
+    }
+    return msgs[Math.floor(Math.random() * msgs.length)];
+  }
+
+  function getWeeklySummary() {
+    var allLogs = Object.values(tLogs);
+    var now = new Date();
+    // This week
+    var wStart = new Date(now); wStart.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)); wStart.setHours(0,0,0,0);
+    var wEnd = new Date(wStart); wEnd.setDate(wStart.getDate() + 7);
+    var thisWeek = allLogs.filter(function(l) { var d = new Date(l.date); return d >= wStart && d < wEnd; });
+    // Last week
+    var lwStart = new Date(wStart); lwStart.setDate(lwStart.getDate() - 7);
+    var lastWeek = allLogs.filter(function(l) { var d = new Date(l.date); return d >= lwStart && d < wStart; });
+
+    var twCount = thisWeek.filter(function(l) { return l.completed === "yes"; }).length;
+    var lwCount = lastWeek.filter(function(l) { return l.completed === "yes"; }).length;
+    var twRating = thisWeek.length > 0 ? thisWeek.reduce(function(s, l) { return s + (l.rating || 0); }, 0) / thisWeek.length : 0;
+    var lwRating = lastWeek.length > 0 ? lastWeek.reduce(function(s, l) { return s + (l.rating || 0); }, 0) / lastWeek.length : 0;
+    var diff = twCount - lwCount;
+
+    return { thisWeekCount: twCount, lastWeekCount: lwCount, diff: diff, thisWeekRating: twRating, lastWeekRating: lwRating, hasLastWeek: lastWeek.length > 0 };
+  }
+
+  var streak = getStreak();
+  var totalLogCount = Object.values(tLogs).filter(function(l) { return l.completed === "yes" || l.completed === "partial"; }).length;
 
   useEffect(function() {
     if (!userId) { setLoaded(true); return; }
@@ -282,7 +361,23 @@ export default function BadmintonTrainingApp() {
   function setSessStatus(di, sid, status) { var key = weekId + "-" + di; var ss = (weekOv[key] || curWeek[di].sessions).map(function(s) { return s.id === sid ? Object.assign({}, s, { cancelled: status === "cancelled" }) : s; }); setWeekOv(Object.assign({}, weekOv, { [key]: ss })); }
   function removeSess(di, sid) { var key = weekId + "-" + di; var ss = (weekOv[key] || curWeek[di].sessions).filter(function(s) { return s.id !== sid; }); setWeekOv(Object.assign({}, weekOv, { [key]: ss })); var dayDate = getDateForDayIndex(di); var logKey = dayDate + "-" + sid; if (tLogs[logKey]) { var newLogs = Object.assign({}, tLogs); delete newLogs[logKey]; setTLogs(newLogs); } }
   function addSess(di) { if (!newSess.label) return; var key = weekId + "-" + di; var ex = weekOv[key] || curWeek[di].sessions; setWeekOv(Object.assign({}, weekOv, { [key]: ex.concat([Object.assign({}, newSess, { id: genId() })]) })); setNewSess({ label: "", time: "", type: "badminton" }); setShowAddSess(false); }
-  function saveTLog() { if (!logSess) return; var saveDate = logSess._logDate || today; var saveWeekId = getWeekId(new Date(saveDate)); var key = saveDate + "-" + logSess.id; setTLogs(Object.assign({}, tLogs, { [key]: Object.assign({}, logForm, { sessionId: logSess.id, sessionLabel: logSess.label, sessionType: logSess.type, date: saveDate, weekId: saveWeekId }) })); setLogSess(null); setLogForm({ completed: "yes", trainingType: [], rating: 0, energy: 0, note: "" }); }
+  function saveTLog() {
+    if (!logSess) return;
+    var saveDate = logSess._logDate || today;
+    var saveWeekId = getWeekId(new Date(saveDate));
+    var key = saveDate + "-" + logSess.id;
+    var newTLogs = Object.assign({}, tLogs, { [key]: Object.assign({}, logForm, { sessionId: logSess.id, sessionLabel: logSess.label, sessionType: logSess.type, date: saveDate, weekId: saveWeekId }) });
+    setTLogs(newTLogs);
+    // Motivation message
+    var msg = getMotivationMessage(logForm);
+    var newTotal = Object.values(newTLogs).filter(function(l) { return l.completed === "yes" || l.completed === "partial"; }).length;
+    var milestone = getMilestone(newTotal);
+    if (milestone) msg = "🎉 " + milestone + " loggade pass! " + msg;
+    setMotivMsg(msg);
+    setTimeout(function() { setMotivMsg(null); }, 4000);
+    setLogSess(null);
+    setLogForm({ completed: "yes", trainingType: [], rating: 0, energy: 0, note: "" });
+  }
   function saveMatch() { if (!showMatch) return; setMLogs(Object.assign({}, mLogs, { [genId()]: Object.assign({}, matchForm, { compName: showMatch.name, compType: showMatch.type, compDate: showMatch.date, date: today }) })); setShowMatch(null); setMatchForm({ matchType: "Singel", won: null, sets: [{ my: "", opp: "" }, { my: "", opp: "" }, { my: "", opp: "" }], opponent: "" }); }
   function filterByPeriod(items, dateField) { var now = new Date(); if (statsFilter === "week") { var wStart = new Date(now); wStart.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)); wStart.setHours(0,0,0,0); return items.filter(function(it) { return new Date(it[dateField]) >= wStart; }); } else if (statsFilter === "month") { return items.filter(function(it) { return new Date(it[dateField]) >= new Date(now.getFullYear(), now.getMonth(), 1); }); } else if (statsFilter === "year") { return items.filter(function(it) { return new Date(it[dateField]) >= new Date(now.getFullYear(), 0, 1); }); } else if (statsFilter === "custom" && customDates.from && customDates.to) { var f = new Date(customDates.from), t = new Date(customDates.to); t.setHours(23,59,59); return items.filter(function(it) { var d = new Date(it[dateField]); return d >= f && d <= t; }); } return items; }
 
@@ -310,7 +405,7 @@ export default function BadmintonTrainingApp() {
           )}
         </div>
         <div style={{ display: "flex", gap: "10px", marginTop: "18px" }}>
-          {[{ l: "Pass", v: actSess, c: C.blue }, { l: "Badminton", v: badCnt, c: C.green }, { l: "Gym", v: gymCnt, c: C.accent }, { l: "Kropp", v: wAvg ? wAvg.toFixed(1) : "—", c: wAvg >= 4 ? C.green : wAvg >= 3 ? C.yellow : C.red }].map(function(s) {
+          {[{ l: "Pass", v: actSess, c: C.blue }, { l: "Badminton", v: badCnt, c: C.green }, { l: "Gym", v: gymCnt, c: C.accent }, { l: "Streak", v: streak > 0 ? streak + "🔥" : "0", c: streak >= 5 ? C.accent : streak > 0 ? C.green : C.textDim }, { l: "Kropp", v: wAvg ? wAvg.toFixed(1) : "—", c: wAvg >= 4 ? C.green : wAvg >= 3 ? C.yellow : C.red }].map(function(s) {
             return (<div key={s.l} style={{ flex: 1, textAlign: "center", padding: "12px 0", background: C.bgCard, borderRadius: R.md, border: "1px solid " + C.borderLight }}>
               <div style={{ fontSize: "22px", fontWeight: 700, color: s.c }}>{s.v}</div>
               <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "1.2px", color: C.textMuted, marginTop: "4px", fontWeight: 500 }}>{s.l}</div>
@@ -325,6 +420,31 @@ export default function BadmintonTrainingApp() {
         {/* WEEK TAB */}
         {activeTab === "week" && (
           <div>
+            {/* Weekly summary */}
+            {(function() {
+              var ws = getWeeklySummary();
+              if (ws.thisWeekCount === 0 && !ws.hasLastWeek) return null;
+              return (
+                <div style={Object.assign({}, cardStyle, { marginBottom: "18px", background: C.bgElevated, border: "1px solid " + C.border })}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
+                    <div style={{ fontSize: "14px", fontWeight: 600, color: C.text }}>Veckoöversikt</div>
+                    {totalLogCount > 0 && <div style={{ fontSize: "12px", color: C.textMuted }}>{totalLogCount} totalt loggade</div>}
+                  </div>
+                  <div style={{ fontSize: "15px", color: C.textSecondary, lineHeight: 1.5 }}>
+                    {ws.thisWeekCount > 0 ? (
+                      <span><span style={{ color: C.green, fontWeight: 600 }}>{ws.thisWeekCount} genomförda pass</span> denna vecka{ws.thisWeekRating > 0 ? <span> med snittinsats <span style={{ color: C.accent, fontWeight: 600 }}>{ws.thisWeekRating.toFixed(1)}</span></span> : ""}</span>
+                    ) : (
+                      <span style={{ color: C.textMuted }}>Inga loggade pass denna vecka ännu</span>
+                    )}
+                  </div>
+                  {ws.hasLastWeek && (
+                    <div style={{ fontSize: "13px", marginTop: "6px", color: ws.diff > 0 ? C.green : ws.diff < 0 ? C.red : C.textMuted }}>
+                      {ws.diff > 0 ? "↑ " + ws.diff + " fler än förra veckan" : ws.diff < 0 ? "↓ " + Math.abs(ws.diff) + " färre än förra veckan" : "Samma som förra veckan"}
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
             <LoadBar value={actSess} max={10} label="Totalbelastning" color={C.blue} />
             <LoadBar value={badCnt} max={7} label="Badminton" color={C.green} />
             <LoadBar value={gymCnt} max={3} label="Gym" color={C.accent} />
@@ -694,6 +814,20 @@ export default function BadmintonTrainingApp() {
             }} style={{ width: "100%", padding: "14px", borderRadius: R.md, border: "1px solid " + C.redBorder, background: C.redDim, color: C.red, fontSize: "14px", cursor: "pointer", fontFamily: font, fontWeight: 600, marginBottom: "8px" }}>Ta bort logg</button>
             <button onClick={function() { setViewLog(null); }} style={{ width: "100%", padding: "14px", borderRadius: R.md, border: "1px solid " + C.border, background: "transparent", color: C.textMuted, fontSize: "14px", cursor: "pointer", fontFamily: font }}>Stäng</button>
           </div>
+        </div>
+      )}
+
+      {/* MOTIVATION TOAST */}
+      {motivMsg && (
+        <div onClick={function() { setMotivMsg(null); }} style={{
+          position: "fixed", top: "20px", left: "50%", transform: "translateX(-50%)",
+          maxWidth: "360px", width: "calc(100% - 48px)", padding: "16px 20px",
+          background: C.bgElevated, border: "1px solid " + C.greenBorder,
+          borderRadius: R.lg, zIndex: 2000, cursor: "pointer",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.4)",
+          animation: "fadeIn 0.3s ease",
+        }}>
+          <div style={{ fontSize: "15px", color: C.text, fontWeight: 500, lineHeight: 1.5 }}>{motivMsg}</div>
         </div>
       )}
 
