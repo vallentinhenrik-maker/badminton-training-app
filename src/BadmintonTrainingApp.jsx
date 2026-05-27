@@ -11,7 +11,6 @@ async function dbLoad(userId) {
     });
     var data = await res.json();
     if (data && data.length > 0) return data[0];
-    // Create empty row if not exists
     await fetch(SUPABASE_URL + "/rest/v1/user_data", {
       method: "POST",
       headers: { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY, "Content-Type": "application/json", Prefer: "return=minimal" },
@@ -32,6 +31,7 @@ async function dbSave(userId, fields) {
   } catch (e) { console.error(e); }
 }
 
+// === CONSTANTS ===
 var DAYS = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"];
 var TRAINING_TYPES = ["Teknik", "Fys", "Enbollsövningar", "Matchspel", "Multi", "Flackt spel", "Teori", "Blandat"];
 var WELLNESS_LABELS = ["Sömn", "Muskeltrötthet", "Motivation", "Energi"];
@@ -71,6 +71,38 @@ var DEFAULT_COMPETITIONS = [
   { date: "2026-06-06", name: "USM", type: "tournament" },
 ];
 
+// === DESIGN TOKENS ===
+var C = {
+  bg: "#121218",
+  bgCard: "#1c1c26",
+  bgCardHover: "#22222e",
+  bgElevated: "#252530",
+  bgInput: "#1a1a24",
+  border: "rgba(255,255,255,0.07)",
+  borderLight: "rgba(255,255,255,0.04)",
+  text: "#f0f0f5",
+  textSecondary: "#a0a0b0",
+  textMuted: "#6a6a7a",
+  textDim: "#4a4a58",
+  accent: "#f5b731",
+  accentDim: "rgba(245,183,49,0.12)",
+  green: "#34d399",
+  greenDim: "rgba(52,211,153,0.12)",
+  greenBorder: "rgba(52,211,153,0.25)",
+  red: "#f87171",
+  redDim: "rgba(248,113,113,0.10)",
+  redBorder: "rgba(248,113,113,0.25)",
+  blue: "#60a5fa",
+  blueDim: "rgba(96,165,250,0.12)",
+  purple: "#a78bfa",
+  purpleDim: "rgba(167,139,250,0.12)",
+  yellow: "#fbbf24",
+  yellowDim: "rgba(251,191,36,0.12)",
+};
+var font = "-apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter', Roboto, Helvetica, Arial, sans-serif";
+var R = { sm: "8px", md: "12px", lg: "16px", xl: "20px" };
+
+// === HELPERS ===
 function getWeekNumber(d) {
   d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
   d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
@@ -83,21 +115,31 @@ function getDayIndex() { var d = new Date().getDay(); return d === 0 ? 6 : d - 1
 function getNextCompetition(comps) { var t = new Date(); t.setHours(0,0,0,0); return comps.find(function(c) { return new Date(c.date) >= t; }); }
 function daysUntil(ds) { var t = new Date(); t.setHours(0,0,0,0); return Math.ceil((new Date(ds) - t) / 86400000); }
 function genId() { return Math.random().toString(36).substr(2, 9); }
+function load(k, fb) { try { var d = localStorage.getItem("bta_" + k); return d ? JSON.parse(d) : fb; } catch(e) { return fb; } }
+function save(k, v) { try { localStorage.setItem("bta_" + k, JSON.stringify(v)); } catch(e) {} }
 
-var inp = { width: "100%", padding: "10px 12px", borderRadius: "8px", border: "1px solid #333", background: "rgba(255,255,255,0.05)", color: "#e0e0e0", fontSize: "13px", fontFamily: "inherit", boxSizing: "border-box" };
-function pill(a, c) { c = c || "#f4a623"; return { flex: 1, padding: "8px 4px", borderRadius: "8px", border: "none", cursor: "pointer", fontSize: "11px", fontWeight: 600, fontFamily: "inherit", background: a ? c + "22" : "rgba(255,255,255,0.05)", color: a ? c : "#666", transition: "all 0.15s ease" }; }
-function ratBtn(a, v) { var c = v <= 2 ? "#e74c3c" : v <= 3 ? "#f4a623" : "#2ecc71"; return { flex: 1, height: "34px", borderRadius: "6px", border: "none", cursor: "pointer", fontSize: "13px", fontWeight: 600, background: a ? c : "rgba(255,255,255,0.06)", color: a ? "#fff" : "#555", transition: "all 0.15s ease" }; }
+// === STYLES ===
+var inputStyle = { width: "100%", padding: "12px 14px", borderRadius: R.md, border: "1px solid " + C.border, background: C.bgInput, color: C.text, fontSize: "15px", fontFamily: font, boxSizing: "border-box", outline: "none" };
+function chipStyle(active, color) { color = color || C.accent; return { padding: "8px 14px", borderRadius: "20px", border: "none", cursor: "pointer", fontSize: "13px", fontWeight: 500, fontFamily: font, background: active ? color + (color.startsWith("rgba") ? "" : "20") : C.bgElevated, color: active ? (color === C.accent ? C.accent : color) : C.textMuted, transition: "all 0.2s ease" }; }
+function ratingBtnStyle(active, v) { var c = v <= 2 ? C.red : v <= 3 ? C.yellow : C.green; return { flex: 1, height: "40px", borderRadius: R.md, border: "none", cursor: "pointer", fontSize: "15px", fontWeight: 600, fontFamily: font, background: active ? c : C.bgElevated, color: active ? "#fff" : C.textDim, transition: "all 0.2s ease" }; }
+var cardStyle = { background: C.bgCard, borderRadius: R.lg, padding: "16px", marginBottom: "10px", border: "1px solid " + C.borderLight };
+var modalOverlay = { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" };
+var modalBox = { background: C.bgCard, borderRadius: R.xl, padding: "24px", width: "100%", maxWidth: "380px", maxHeight: "85vh", overflowY: "auto", border: "1px solid " + C.border };
+var sectionTitle = { fontSize: "18px", fontWeight: 700, color: C.text, marginBottom: "6px" };
+var sectionSub = { fontSize: "13px", color: C.textMuted, marginBottom: "14px" };
+var labelStyle = { fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.2px", color: C.textMuted, marginBottom: "8px", fontWeight: 600 };
 
+// === COMPONENTS ===
 function LoadBar(p) {
   var pct = Math.min((p.value / p.max) * 100, 100), hi = pct > 85;
   return (
-    <div style={{ marginBottom: "8px" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}>
-        <span style={{ fontSize: "12px", color: "#8a8a9a" }}>{p.label}</span>
-        <span style={{ fontSize: "12px", color: hi ? "#e74c3c" : "#8a8a9a", fontWeight: hi ? 700 : 400 }}>{hi ? "⚠ Hög" : Math.round(pct) + "%"}</span>
+    <div style={{ marginBottom: "12px" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
+        <span style={{ fontSize: "13px", color: C.textSecondary, fontWeight: 500 }}>{p.label}</span>
+        <span style={{ fontSize: "13px", color: hi ? C.red : C.textSecondary, fontWeight: hi ? 600 : 400 }}>{hi ? "⚠ Hög" : Math.round(pct) + "%"}</span>
       </div>
-      <div style={{ height: "6px", background: "rgba(255,255,255,0.06)", borderRadius: "3px", overflow: "hidden" }}>
-        <div style={{ width: pct + "%", height: "100%", background: hi ? "#e74c3c" : p.color, borderRadius: "3px", transition: "width 0.5s ease" }} />
+      <div style={{ height: "8px", background: C.bgElevated, borderRadius: "4px", overflow: "hidden" }}>
+        <div style={{ width: pct + "%", height: "100%", background: hi ? C.red : p.color, borderRadius: "4px", transition: "width 0.5s ease" }} />
       </div>
     </div>
   );
@@ -108,25 +150,25 @@ function GymLog(p) {
   return (
     <div>{cats.map(function(cat) {
       return (
-        <div key={cat} style={{ marginBottom: "14px" }}>
-          <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "2px", color: "#f4a623", marginBottom: "6px" }}>{cat}</div>
+        <div key={cat} style={{ marginBottom: "16px" }}>
+          <div style={Object.assign({}, labelStyle, { color: C.accent })}>{cat}</div>
           {p.exercises.filter(function(e) { return e.category === cat; }).map(function(ex) {
             return (
               <div key={ex.id} onClick={function() { p.setLog(function(prev) { var n = Object.assign({}, prev); n[ex.id] = !n[ex.id]; return n; }); }} style={{
-                display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 10px", marginBottom: "3px", borderRadius: "8px",
-                background: p.log[ex.id] ? "rgba(46,204,113,0.1)" : "rgba(255,255,255,0.03)",
-                border: p.log[ex.id] ? "1px solid rgba(46,204,113,0.3)" : "1px solid transparent", cursor: "pointer",
+                display: "flex", alignItems: "center", justifyContent: "space-between", padding: "12px 14px", marginBottom: "6px", borderRadius: R.md,
+                background: p.log[ex.id] ? C.greenDim : C.bgElevated,
+                border: p.log[ex.id] ? "1px solid " + C.greenBorder : "1px solid " + C.borderLight, cursor: "pointer", transition: "all 0.2s ease",
               }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <div style={{ width: "18px", height: "18px", borderRadius: "4px", border: p.log[ex.id] ? "none" : "2px solid #444", background: p.log[ex.id] ? "#2ecc71" : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", color: "#fff", flexShrink: 0 }}>{p.log[ex.id] ? "✓" : ""}</div>
+                <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                  <div style={{ width: "22px", height: "22px", borderRadius: "6px", border: p.log[ex.id] ? "none" : "2px solid " + C.textDim, background: p.log[ex.id] ? C.green : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", color: "#fff", flexShrink: 0, transition: "all 0.2s ease" }}>{p.log[ex.id] ? "✓" : ""}</div>
                   <div>
-                    <div style={{ fontSize: "13px", color: "#e0e0e0", fontWeight: 500 }}>{ex.name}</div>
-                    <div style={{ fontSize: "10px", color: "#666" }}>{ex.sets}×{ex.reps} — {ex.targetMuscle}</div>
+                    <div style={{ fontSize: "14px", color: C.text, fontWeight: 500 }}>{ex.name}</div>
+                    <div style={{ fontSize: "12px", color: C.textMuted, marginTop: "2px" }}>{ex.sets}×{ex.reps} — {ex.targetMuscle}</div>
                   </div>
                 </div>
                 <div onClick={function(e) { e.stopPropagation(); }}>
                   <input type="number" placeholder="kg" value={p.log["w_" + ex.id] || ""} onChange={function(e) { p.setLog(function(prev) { var n = Object.assign({}, prev); n["w_" + ex.id] = e.target.value; return n; }); }}
-                    style={{ width: "48px", padding: "3px 5px", borderRadius: "5px", border: "1px solid #333", background: "rgba(255,255,255,0.05)", color: "#ccc", fontSize: "11px", textAlign: "center" }} />
+                    style={{ width: "54px", padding: "6px", borderRadius: R.sm, border: "1px solid " + C.border, background: C.bgInput, color: C.text, fontSize: "13px", textAlign: "center", fontFamily: font, outline: "none" }} />
                 </div>
               </div>
             );
@@ -137,6 +179,16 @@ function GymLog(p) {
   );
 }
 
+function StatCard(p) {
+  return (
+    <div style={Object.assign({}, cardStyle, { textAlign: "center", padding: "18px 12px" })}>
+      <div style={{ fontSize: "28px", fontWeight: 700, color: p.color }}>{p.value}</div>
+      <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.2px", color: C.textMuted, marginTop: "6px", fontWeight: 500 }}>{p.label}</div>
+    </div>
+  );
+}
+
+// === MAIN APP ===
 export default function BadmintonTrainingApp() {
   var _u = useState(function() { try { return localStorage.getItem("bta_userId") || ""; } catch (e) { return ""; } }), userId = _u[0], setUserId = _u[1];
   var _li = useState(false), loaded = _li[0], setLoaded = _li[1];
@@ -147,7 +199,6 @@ export default function BadmintonTrainingApp() {
   var _wl = useState({}), wLogs = _wl[0], setWLogs = _wl[1];
   var _gl = useState({}), gLogs = _gl[0], setGLogs = _gl[1];
   var _ml = useState({}), mLogs = _ml[0], setMLogs = _ml[1];
-
   var _sac = useState(false), showAddComp = _sac[0], setShowAddComp = _sac[1];
   var _nc = useState({ name: "", date: "", type: "tournament" }), newComp = _nc[0], setNewComp = _nc[1];
   var _sas = useState(false), showAddSess = _sas[0], setShowAddSess = _sas[1];
@@ -165,7 +216,6 @@ export default function BadmintonTrainingApp() {
   var _sy = useState(false), syncing = _sy[0], setSyncing = _sy[1];
   var _vl = useState(null), viewLog = _vl[0], setViewLog = _vl[1];
 
-  // Load from Supabase on login
   useEffect(function() {
     if (!userId) { setLoaded(true); return; }
     setLoaded(false);
@@ -182,246 +232,138 @@ export default function BadmintonTrainingApp() {
     });
   }, [userId]);
 
-  // Save to Supabase whenever data changes (debounced)
   useEffect(function() {
     if (!userId || !loaded) return;
     setSyncing(true);
     var t = setTimeout(function() {
-      dbSave(userId, {
-        competitions: competitions,
-        week_overrides: weekOv,
-        training_logs: tLogs,
-        wellness_logs: wLogs,
-        gym_logs: gLogs,
-        match_logs: mLogs,
-      }).then(function() { setSyncing(false); });
+      dbSave(userId, { competitions: competitions, week_overrides: weekOv, training_logs: tLogs, wellness_logs: wLogs, gym_logs: gLogs, match_logs: mLogs }).then(function() { setSyncing(false); });
     }, 800);
     return function() { clearTimeout(t); };
   }, [competitions, weekOv, tLogs, wLogs, gLogs, mLogs, userId, loaded]);
 
-  function handleLogin() {
-    if (!loginName.trim()) return;
-    var clean = loginName.trim().toLowerCase().replace(/\s+/g, "_");
-    try { localStorage.setItem("bta_userId", clean); } catch (e) {}
-    setUserId(clean);
-  }
+  function handleLogin() { if (!loginName.trim()) return; var clean = loginName.trim().toLowerCase().replace(/\s+/g, "_"); try { localStorage.setItem("bta_userId", clean); } catch (e) {} setUserId(clean); }
+  function handleLogout() { try { localStorage.removeItem("bta_userId"); } catch (e) {} setUserId(""); setCompetitions(DEFAULT_COMPETITIONS); setWeekOv({}); setTLogs({}); setWLogs({}); setGLogs({}); setMLogs({}); }
 
-  function handleLogout() {
-    try { localStorage.removeItem("bta_userId"); } catch (e) {}
-    setUserId("");
-    setCompetitions(DEFAULT_COMPETITIONS); setWeekOv({}); setTLogs({}); setWLogs({}); setGLogs({}); setMLogs({});
-  }
-
-  // Login screen
   if (!userId) {
     return (
-      <div style={{ fontFamily: "'JetBrains Mono','SF Mono',monospace", background: "#0d0d12", color: "#e0e0e0", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "20px" }}>
-        <div style={{ maxWidth: "320px", width: "100%" }}>
-          <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "3px", color: "#555", marginBottom: "8px", textAlign: "center" }}>Badminton Performance</div>
-          <div style={{ fontSize: "28px", fontWeight: 700, color: "#fff", textAlign: "center", marginBottom: "30px" }}>Logga in 🏸</div>
-          <div style={{ fontSize: "12px", color: "#888", marginBottom: "10px", textAlign: "center" }}>Skriv samma användarnamn på alla enheter för att se samma data</div>
-          <input type="text" placeholder="Användarnamn" value={loginName} onChange={function(e) { setLoginName(e.target.value); }} onKeyDown={function(e) { if (e.key === "Enter") handleLogin(); }} style={Object.assign({}, inp, { marginBottom: "12px", textAlign: "center", fontSize: "16px", padding: "14px" })} />
-          <button onClick={handleLogin} style={{ width: "100%", padding: "14px", borderRadius: "10px", border: "none", background: loginName.trim() ? "#f4a623" : "rgba(255,255,255,0.05)", color: loginName.trim() ? "#000" : "#555", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Logga in</button>
+      <div style={{ fontFamily: font, background: C.bg, color: C.text, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
+        <div style={{ maxWidth: "340px", width: "100%" }}>
+          <div style={{ textAlign: "center", marginBottom: "40px" }}>
+            <div style={{ fontSize: "48px", marginBottom: "12px" }}>🏸</div>
+            <div style={{ fontSize: "28px", fontWeight: 700, color: C.text, marginBottom: "8px" }}>Badminton Tracker</div>
+            <div style={{ fontSize: "15px", color: C.textMuted }}>Logga träning, matcher & utveckling</div>
+          </div>
+          <div style={{ fontSize: "13px", color: C.textMuted, marginBottom: "12px", textAlign: "center" }}>Skriv samma namn på alla enheter</div>
+          <input type="text" placeholder="Ditt användarnamn" value={loginName} onChange={function(e) { setLoginName(e.target.value); }} onKeyDown={function(e) { if (e.key === "Enter") handleLogin(); }} style={Object.assign({}, inputStyle, { marginBottom: "14px", textAlign: "center", fontSize: "18px", padding: "16px" })} />
+          <button onClick={handleLogin} style={{ width: "100%", padding: "16px", borderRadius: R.lg, border: "none", background: loginName.trim() ? C.accent : C.bgElevated, color: loginName.trim() ? "#000" : C.textDim, fontSize: "16px", fontWeight: 700, cursor: "pointer", fontFamily: font, transition: "all 0.2s" }}>Logga in</button>
         </div>
       </div>
     );
   }
 
-  if (!loaded) {
-    return (
-      <div style={{ fontFamily: "'JetBrains Mono','SF Mono',monospace", background: "#0d0d12", color: "#e0e0e0", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div style={{ color: "#666" }}>Laddar...</div>
-      </div>
-    );
-  }
+  if (!loaded) return (<div style={{ fontFamily: font, background: C.bg, color: C.text, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}><div style={{ color: C.textMuted, fontSize: "16px" }}>Laddar...</div></div>);
 
   var today = getTodayStr(), weekId = getWeekId(new Date()), weekNum = getWeekNumber(new Date()), todayIdx = getDayIndex();
   var sortedComps = competitions.slice().sort(function(a, b) { return new Date(a.date) - new Date(b.date); });
   var nextComp = getNextCompetition(sortedComps);
   var daysToComp = nextComp ? daysUntil(nextComp.date) : null;
   var isTaper = daysToComp !== null && daysToComp <= 3;
-
-  var curWeek = DEFAULT_WEEK.map(function(day, i) {
-    var ov = weekOv[weekId + "-" + i];
-    return ov ? Object.assign({}, day, { sessions: ov }) : day;
-  });
-
+  var curWeek = DEFAULT_WEEK.map(function(day, i) { var ov = weekOv[weekId + "-" + i]; return ov ? Object.assign({}, day, { sessions: ov }) : day; });
   var actSess = curWeek.reduce(function(s, d) { return s + d.sessions.filter(function(x) { return x.type !== "rest" && !x.cancelled; }).length; }, 0);
   var badCnt = curWeek.reduce(function(s, d) { return s + d.sessions.filter(function(x) { return x.type === "badminton" && !x.cancelled; }).length; }, 0);
   var gymCnt = curWeek.reduce(function(s, d) { return s + d.sessions.filter(function(x) { return x.type === "gym" && !x.cancelled; }).length; }, 0);
-
   var todayW = wLogs[today] || {};
   var wCnt = WELLNESS_LABELS.filter(function(l) { return todayW[l]; }).length;
   var wAvg = wCnt > 0 ? WELLNESS_LABELS.reduce(function(s, l) { return s + (todayW[l] || 0); }, 0) / wCnt : 0;
   var todayGym = gLogs[today] || {};
 
-  function setSessStatus(di, sid, status) {
-    var key = weekId + "-" + di;
-    var ss = (weekOv[key] || curWeek[di].sessions).map(function(s) { return s.id === sid ? Object.assign({}, s, { cancelled: status === "cancelled" }) : s; });
-    setWeekOv(Object.assign({}, weekOv, { [key]: ss }));
-  }
+  function getDateForDayIndex(dayIdx) { var now = new Date(); var diff = dayIdx - getDayIndex(); var d = new Date(now); d.setDate(now.getDate() + diff); return d.toISOString().split("T")[0]; }
+  function getSessionStatus(di, sid) { var dayDate = getDateForDayIndex(di); var key = dayDate + "-" + sid; if (tLogs[key]) return "done"; var dayData = weekOv[weekId + "-" + di] || curWeek[di].sessions; var sess = dayData.find(function(s) { return s.id === sid; }); if (sess && sess.cancelled) return "cancelled"; return "planned"; }
+  function setSessStatus(di, sid, status) { var key = weekId + "-" + di; var ss = (weekOv[key] || curWeek[di].sessions).map(function(s) { return s.id === sid ? Object.assign({}, s, { cancelled: status === "cancelled" }) : s; }); setWeekOv(Object.assign({}, weekOv, { [key]: ss })); }
+  function removeSess(di, sid) { var key = weekId + "-" + di; var ss = (weekOv[key] || curWeek[di].sessions).filter(function(s) { return s.id !== sid; }); setWeekOv(Object.assign({}, weekOv, { [key]: ss })); var dayDate = getDateForDayIndex(di); var logKey = dayDate + "-" + sid; if (tLogs[logKey]) { var newLogs = Object.assign({}, tLogs); delete newLogs[logKey]; setTLogs(newLogs); } }
+  function addSess(di) { if (!newSess.label) return; var key = weekId + "-" + di; var ex = weekOv[key] || curWeek[di].sessions; setWeekOv(Object.assign({}, weekOv, { [key]: ex.concat([Object.assign({}, newSess, { id: genId() })]) })); setNewSess({ label: "", time: "", type: "badminton" }); setShowAddSess(false); }
+  function saveTLog() { if (!logSess) return; var saveDate = logSess._logDate || today; var saveWeekId = getWeekId(new Date(saveDate)); var key = saveDate + "-" + logSess.id; setTLogs(Object.assign({}, tLogs, { [key]: Object.assign({}, logForm, { sessionId: logSess.id, sessionLabel: logSess.label, sessionType: logSess.type, date: saveDate, weekId: saveWeekId }) })); setLogSess(null); setLogForm({ completed: "yes", trainingType: [], rating: 0, energy: 0, note: "" }); }
+  function saveMatch() { if (!showMatch) return; setMLogs(Object.assign({}, mLogs, { [genId()]: Object.assign({}, matchForm, { compName: showMatch.name, compType: showMatch.type, compDate: showMatch.date, date: today }) })); setShowMatch(null); setMatchForm({ matchType: "Singel", won: null, sets: [{ my: "", opp: "" }, { my: "", opp: "" }, { my: "", opp: "" }], opponent: "" }); }
+  function filterByPeriod(items, dateField) { var now = new Date(); if (statsFilter === "week") { var wStart = new Date(now); wStart.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)); wStart.setHours(0,0,0,0); return items.filter(function(it) { return new Date(it[dateField]) >= wStart; }); } else if (statsFilter === "month") { return items.filter(function(it) { return new Date(it[dateField]) >= new Date(now.getFullYear(), now.getMonth(), 1); }); } else if (statsFilter === "year") { return items.filter(function(it) { return new Date(it[dateField]) >= new Date(now.getFullYear(), 0, 1); }); } else if (statsFilter === "custom" && customDates.from && customDates.to) { var f = new Date(customDates.from), t = new Date(customDates.to); t.setHours(23,59,59); return items.filter(function(it) { var d = new Date(it[dateField]); return d >= f && d <= t; }); } return items; }
 
-  function removeSess(di, sid) {
-    var key = weekId + "-" + di;
-    var ss = (weekOv[key] || curWeek[di].sessions).filter(function(s) { return s.id !== sid; });
-    setWeekOv(Object.assign({}, weekOv, { [key]: ss }));
-    // Also remove any logged entry for this session in this week
-    var dayDate = getDateForDayIndex(di);
-    var logKey = dayDate + "-" + sid;
-    if (tLogs[logKey]) {
-      var newLogs = Object.assign({}, tLogs);
-      delete newLogs[logKey];
-      setTLogs(newLogs);
-    }
-  }
-
-  function addSess(di) {
-    if (!newSess.label) return;
-    var key = weekId + "-" + di;
-    var ex = weekOv[key] || curWeek[di].sessions;
-    setWeekOv(Object.assign({}, weekOv, { [key]: ex.concat([Object.assign({}, newSess, { id: genId() })]) }));
-    setNewSess({ label: "", time: "", type: "badminton" }); setShowAddSess(false);
-  }
-
-  function saveTLog() {
-    if (!logSess) return;
-    var saveDate = logSess._logDate || today;
-    var saveWeekId = getWeekId(new Date(saveDate));
-    var key = saveDate + "-" + logSess.id;
-    setTLogs(Object.assign({}, tLogs, { [key]: Object.assign({}, logForm, { sessionId: logSess.id, sessionLabel: logSess.label, sessionType: logSess.type, date: saveDate, weekId: saveWeekId }) }));
-    setLogSess(null); setLogForm({ completed: "yes", trainingType: [], rating: 0, energy: 0, note: "" });
-  }
-
-  function saveMatch() {
-    if (!showMatch) return;
-    var key = genId();
-    setMLogs(Object.assign({}, mLogs, { [key]: Object.assign({}, matchForm, { compName: showMatch.name, compType: showMatch.type, compDate: showMatch.date, date: today }) }));
-    setShowMatch(null); setMatchForm({ matchType: "Singel", won: null, sets: [{ my: "", opp: "" }, { my: "", opp: "" }, { my: "", opp: "" }], opponent: "" });
-  }
-
-  function getDateForDayIndex(dayIdx) {
-    var now = new Date();
-    var currentDayIdx = getDayIndex();
-    var diff = dayIdx - currentDayIdx;
-    var d = new Date(now);
-    d.setDate(now.getDate() + diff);
-    return d.toISOString().split("T")[0];
-  }
-
-  function getSessionStatus(di, sid) {
-    var dayDate = getDateForDayIndex(di);
-    var key = dayDate + "-" + sid;
-    if (tLogs[key]) return "done";
-    var dayData = weekOv[weekId + "-" + di] || curWeek[di].sessions;
-    var sess = dayData.find(function(s) { return s.id === sid; });
-    if (sess && sess.cancelled) return "cancelled";
-    return "planned";
-  }
-
-  function filterByPeriod(items, dateField) {
-    var now = new Date();
-    if (statsFilter === "week") {
-      var wStart = new Date(now); wStart.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)); wStart.setHours(0,0,0,0);
-      return items.filter(function(it) { return new Date(it[dateField]) >= wStart; });
-    } else if (statsFilter === "month") {
-      var mStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      return items.filter(function(it) { return new Date(it[dateField]) >= mStart; });
-    } else if (statsFilter === "year") {
-      var yStart = new Date(now.getFullYear(), 0, 1);
-      return items.filter(function(it) { return new Date(it[dateField]) >= yStart; });
-    } else if (statsFilter === "custom" && customDates.from && customDates.to) {
-      var f = new Date(customDates.from), t = new Date(customDates.to); t.setHours(23,59,59);
-      return items.filter(function(it) { var d = new Date(it[dateField]); return d >= f && d <= t; });
-    }
-    return items;
-  }
-
-  var tabs = [
-    { id: "week", label: "Vecka", icon: "📅" },
-    { id: "log", label: "Logg", icon: "✏️" },
-    { id: "stats", label: "Statistik", icon: "📊" },
-    { id: "calendar", label: "Tävling", icon: "🏸" },
-  ];
+  var tabs = [{ id: "week", label: "Vecka", icon: "📅" }, { id: "log", label: "Logg", icon: "✏️" }, { id: "stats", label: "Statistik", icon: "📊" }, { id: "calendar", label: "Tävling", icon: "🏸" }];
 
   return (
-    <div style={{ fontFamily: "'JetBrains Mono','SF Mono','Fira Code',monospace", background: "#0d0d12", color: "#e0e0e0", minHeight: "100vh", maxWidth: "600px", width: "100%", margin: "0 auto", position: "relative", paddingBottom: "80px" }}>
+    <div style={{ fontFamily: font, background: C.bg, color: C.text, minHeight: "100vh", maxWidth: "600px", width: "100%", margin: "0 auto", position: "relative", paddingBottom: "90px" }}>
 
-      <div style={{ padding: "24px 20px 16px", background: "linear-gradient(180deg,#14141e 0%,#0d0d12 100%)", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
+      {/* HEADER */}
+      <div style={{ padding: "28px 24px 20px", background: "linear-gradient(180deg, #1a1a26 0%, " + C.bg + " 100%)", borderBottom: "1px solid " + C.borderLight }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
-            <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "3px", color: "#555", marginBottom: "4px", display: "flex", alignItems: "center", gap: "8px" }}>
-              <span>{userId}</span>
-              {syncing && <span style={{ color: "#3498db" }}>● synkar</span>}
-              <button onClick={handleLogout} style={{ padding: "1px 6px", borderRadius: "3px", border: "1px solid #333", background: "transparent", color: "#666", fontSize: "9px", cursor: "pointer", fontFamily: "inherit" }}>Logga ut</button>
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
+              <span style={{ fontSize: "12px", color: C.textMuted, fontWeight: 500 }}>{userId}</span>
+              {syncing && <span style={{ fontSize: "11px", color: C.blue }}>● synkar</span>}
+              <button onClick={handleLogout} style={{ padding: "3px 8px", borderRadius: "4px", border: "1px solid " + C.border, background: "transparent", color: C.textMuted, fontSize: "11px", cursor: "pointer", fontFamily: font }}>Logga ut</button>
             </div>
-            <div style={{ fontSize: "26px", fontWeight: 700, color: "#fff" }}>Vecka {weekNum}</div>
+            <div style={{ fontSize: "30px", fontWeight: 700, color: C.text, letterSpacing: "-0.5px" }}>Vecka {weekNum}</div>
           </div>
           {nextComp && (
-            <div style={{ background: daysToComp <= 3 ? "rgba(231,76,60,0.15)" : "rgba(244,166,35,0.12)", border: "1px solid " + (daysToComp <= 3 ? "rgba(231,76,60,0.3)" : "rgba(244,166,35,0.25)"), borderRadius: "8px", padding: "6px 10px" }}>
-              <div style={{ fontSize: "10px", color: daysToComp <= 3 ? "#e74c3c" : "#f4a623", textTransform: "uppercase", letterSpacing: "1px" }}>{daysToComp <= 3 ? "Tävling snart!" : "Nästa tävling"}</div>
-              <div style={{ fontSize: "12px", color: "#ccc", marginTop: "2px" }}>{nextComp.name} — {daysToComp}d</div>
+            <div style={{ background: daysToComp <= 3 ? C.redDim : C.accentDim, border: "1px solid " + (daysToComp <= 3 ? C.redBorder : "rgba(245,183,49,0.25)"), borderRadius: R.md, padding: "8px 12px", maxWidth: "180px" }}>
+              <div style={{ fontSize: "10px", color: daysToComp <= 3 ? C.red : C.accent, textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600 }}>{daysToComp <= 3 ? "Tävling snart!" : "Nästa tävling"}</div>
+              <div style={{ fontSize: "13px", color: C.textSecondary, marginTop: "3px" }}>{nextComp.name} — {daysToComp}d</div>
             </div>
           )}
         </div>
-        <div style={{ display: "flex", gap: "10px", marginTop: "14px" }}>
-          {[{ l: "Pass", v: actSess, c: "#3498db" }, { l: "Badminton", v: badCnt, c: "#2ecc71" }, { l: "Gym", v: gymCnt, c: "#f4a623" }, { l: "Kropp", v: wAvg ? wAvg.toFixed(1) : "—", c: wAvg >= 4 ? "#2ecc71" : wAvg >= 3 ? "#f4a623" : "#e74c3c" }].map(function(s) {
-            return (<div key={s.l} style={{ flex: 1, textAlign: "center", padding: "8px 0", background: "rgba(255,255,255,0.03)", borderRadius: "10px" }}>
-              <div style={{ fontSize: "18px", fontWeight: 700, color: s.c }}>{s.v}</div>
-              <div style={{ fontSize: "9px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#666", marginTop: "2px" }}>{s.l}</div>
+        <div style={{ display: "flex", gap: "10px", marginTop: "18px" }}>
+          {[{ l: "Pass", v: actSess, c: C.blue }, { l: "Badminton", v: badCnt, c: C.green }, { l: "Gym", v: gymCnt, c: C.accent }, { l: "Kropp", v: wAvg ? wAvg.toFixed(1) : "—", c: wAvg >= 4 ? C.green : wAvg >= 3 ? C.yellow : C.red }].map(function(s) {
+            return (<div key={s.l} style={{ flex: 1, textAlign: "center", padding: "12px 0", background: C.bgCard, borderRadius: R.md, border: "1px solid " + C.borderLight }}>
+              <div style={{ fontSize: "22px", fontWeight: 700, color: s.c }}>{s.v}</div>
+              <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "1.2px", color: C.textMuted, marginTop: "4px", fontWeight: 500 }}>{s.l}</div>
             </div>);
           })}
         </div>
       </div>
 
-      <div style={{ padding: "16px 20px" }}>
+      {/* CONTENT */}
+      <div style={{ padding: "20px 24px" }}>
 
+        {/* WEEK TAB */}
         {activeTab === "week" && (
           <div>
-            <LoadBar value={actSess} max={10} label="Totalbelastning" color="#3498db" />
-            <LoadBar value={badCnt} max={7} label="Badminton" color="#2ecc71" />
-            <LoadBar value={gymCnt} max={3} label="Gym" color="#f4a623" />
-            {isTaper && (<div style={{ background: "rgba(231,76,60,0.1)", border: "1px solid rgba(231,76,60,0.25)", borderRadius: "10px", padding: "12px 14px", margin: "12px 0" }}>
-              <div style={{ fontSize: "13px", fontWeight: 600, color: "#e74c3c" }}>⚡ Tävlingsvecka — Tapering</div>
-              <div style={{ fontSize: "12px", color: "#999", marginTop: "4px" }}>Kör lättare gym. Fokus mobilitet och aktivering.</div>
+            <LoadBar value={actSess} max={10} label="Totalbelastning" color={C.blue} />
+            <LoadBar value={badCnt} max={7} label="Badminton" color={C.green} />
+            <LoadBar value={gymCnt} max={3} label="Gym" color={C.accent} />
+            {isTaper && (<div style={{ background: C.redDim, border: "1px solid " + C.redBorder, borderRadius: R.lg, padding: "14px 16px", margin: "16px 0" }}>
+              <div style={{ fontSize: "15px", fontWeight: 600, color: C.red }}>⚡ Tävlingsvecka — Tapering</div>
+              <div style={{ fontSize: "13px", color: C.textSecondary, marginTop: "4px" }}>Kör lättare gym. Fokus mobilitet och aktivering.</div>
             </div>)}
-            <div style={{ marginTop: "12px" }}>
+            <div style={{ marginTop: "16px" }}>
               {curWeek.map(function(day, i) {
                 var isToday = i === todayIdx;
                 return (
-                  <div key={i} style={{ padding: "10px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
-                      <div style={{ fontSize: "12px", fontWeight: 700, color: isToday ? "#3498db" : "#666" }}>{day.day}{isToday ? " ← idag" : ""}</div>
-                      <button onClick={function() { setAddSessDay(i); setShowAddSess(true); }} style={{ padding: "2px 8px", borderRadius: "4px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#666", fontSize: "11px", cursor: "pointer", fontFamily: "inherit" }}>+</button>
+                  <div key={i} style={{ padding: "14px 0", borderBottom: "1px solid " + C.borderLight }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
+                      <div style={{ fontSize: "14px", fontWeight: 600, color: isToday ? C.blue : C.textSecondary }}>{day.day}{isToday ? " — idag" : ""}</div>
+                      <button onClick={function() { setAddSessDay(i); setShowAddSess(true); }} style={{ padding: "4px 12px", borderRadius: R.sm, border: "1px solid " + C.border, background: "transparent", color: C.textMuted, fontSize: "12px", cursor: "pointer", fontFamily: font }}>+ Lägg till</button>
                     </div>
                     {day.sessions.map(function(s) {
-                      if (s.type === "rest") return (<div key={s.id} style={{ padding: "6px 10px", fontSize: "12px", color: "#444" }}>{s.label}</div>);
+                      if (s.type === "rest") return (<div key={s.id} style={{ padding: "10px 14px", fontSize: "13px", color: C.textDim, background: C.bgCard, borderRadius: R.md, marginBottom: "6px" }}>{s.label}</div>);
                       var status = getSessionStatus(i, s.id);
-                      var stColor = status === "done" ? "#2ecc71" : status === "cancelled" ? "#e74c3c" : "#3498db";
+                      var stColor = status === "done" ? C.green : status === "cancelled" ? C.red : C.blue;
                       var stLabel = status === "done" ? "Genomfört" : status === "cancelled" ? "Inställt" : "Planerat";
                       var dayDate = getDateForDayIndex(i);
-                      var logKey = dayDate + "-" + s.id;
-                      var logEntry = tLogs[logKey];
+                      var logEntry = tLogs[dayDate + "-" + s.id];
+                      var dotColor = s.type === "badminton" ? C.green : C.accent;
                       return (
-                        <div key={s.id} style={{ display: "flex", alignItems: "center", gap: "8px", padding: "8px 10px", borderRadius: "8px", marginBottom: "4px", background: "rgba(255,255,255,0.03)" }}>
-                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0, background: s.type === "badminton" ? "#2ecc71" : "#f4a623" }} />
-                          <div style={{ flex: 1, fontSize: "13px", color: status === "cancelled" ? "#666" : "#ccc", textDecoration: status === "cancelled" ? "line-through" : "none" }}>{s.label}</div>
-                          {s.time ? <div style={{ fontSize: "11px", color: "#555" }}>{s.time}</div> : null}
+                        <div key={s.id} style={Object.assign({}, cardStyle, { display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", marginBottom: "6px" })}>
+                          <div style={{ width: "10px", height: "10px", borderRadius: "50%", flexShrink: 0, background: dotColor }} />
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: "14px", color: status === "cancelled" ? C.textDim : C.text, textDecoration: status === "cancelled" ? "line-through" : "none", fontWeight: 500 }}>{s.label}</div>
+                            {s.time ? <div style={{ fontSize: "12px", color: C.textMuted, marginTop: "2px" }}>{s.time}</div> : null}
+                          </div>
                           <button onClick={function() {
-                            if (status === "done" && logEntry) {
-                              setViewLog(Object.assign({}, logEntry, { displayDate: dayDate }));
-                            } else if (status === "cancelled") {
-                              setSessStatus(i, s.id, "planned");
-                            } else if (status === "planned") {
-                              setSessStatus(i, s.id, "cancelled");
-                            }
-                          }} style={{ padding: "3px 8px", borderRadius: "4px", border: "none", background: stColor + "18", color: stColor, fontSize: "10px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit", minWidth: "70px", textAlign: "center" }}>
+                            if (status === "done" && logEntry) setViewLog(Object.assign({}, logEntry, { displayDate: dayDate }));
+                            else if (status === "cancelled") setSessStatus(i, s.id, "planned");
+                            else if (status === "planned") setSessStatus(i, s.id, "cancelled");
+                          }} style={{ padding: "5px 12px", borderRadius: "20px", border: "none", background: stColor + "18", color: stColor, fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: font, minWidth: "80px", textAlign: "center" }}>
                             {stLabel}
                           </button>
-                          <button onClick={function() {
-                            if (window.confirm("Vill du ta bort detta pass från " + day.day + "?")) {
-                              removeSess(i, s.id);
-                            }
-                          }} title="Ta bort pass" style={{ padding: "3px 6px", borderRadius: "4px", border: "none", background: "rgba(231,76,60,0.08)", color: "#e74c3c", fontSize: "12px", cursor: "pointer", fontFamily: "inherit" }}>×</button>
+                          <button onClick={function() { if (window.confirm("Ta bort " + s.label + " från " + day.day + "?")) removeSess(i, s.id); }} style={{ padding: "4px 8px", borderRadius: "6px", border: "none", background: C.redDim, color: C.red, fontSize: "14px", cursor: "pointer", fontFamily: font, lineHeight: 1 }}>×</button>
                         </div>
                       );
                     })}
@@ -430,460 +372,256 @@ export default function BadmintonTrainingApp() {
               })}
             </div>
             {showAddSess && (
-              <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }} onClick={function() { setShowAddSess(false); }}>
-                <div onClick={function(e) { e.stopPropagation(); }} style={{ background: "#1a1a24", borderRadius: "16px", padding: "20px", width: "100%", maxWidth: "340px" }}>
-                  <div style={{ fontSize: "15px", fontWeight: 700, color: "#fff", marginBottom: "14px" }}>Lägg till — {DAYS[addSessDay]}</div>
-                  <input type="text" placeholder="Namn" value={newSess.label} onChange={function(e) { setNewSess(Object.assign({}, newSess, { label: e.target.value })); }} style={Object.assign({}, inp, { marginBottom: "8px" })} />
-                  <input type="text" placeholder="Tid (t.ex. 18:00-19:30)" value={newSess.time} onChange={function(e) { setNewSess(Object.assign({}, newSess, { time: e.target.value })); }} style={Object.assign({}, inp, { marginBottom: "8px" })} />
-                  <div style={{ display: "flex", gap: "6px", marginBottom: "12px" }}>
-                    <button onClick={function() { setNewSess(Object.assign({}, newSess, { type: "badminton" })); }} style={pill(newSess.type === "badminton")}>Badminton</button>
-                    <button onClick={function() { setNewSess(Object.assign({}, newSess, { type: "gym" })); }} style={pill(newSess.type === "gym")}>Gym</button>
+              <div style={modalOverlay} onClick={function() { setShowAddSess(false); }}>
+                <div onClick={function(e) { e.stopPropagation(); }} style={modalBox}>
+                  <div style={sectionTitle}>Lägg till pass — {DAYS[addSessDay]}</div>
+                  <div style={{ marginTop: "16px" }}>
+                    <input type="text" placeholder="Namn" value={newSess.label} onChange={function(e) { setNewSess(Object.assign({}, newSess, { label: e.target.value })); }} style={Object.assign({}, inputStyle, { marginBottom: "10px" })} />
+                    <input type="text" placeholder="Tid (t.ex. 18:00-19:30)" value={newSess.time} onChange={function(e) { setNewSess(Object.assign({}, newSess, { time: e.target.value })); }} style={Object.assign({}, inputStyle, { marginBottom: "12px" })} />
+                    <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+                      <button onClick={function() { setNewSess(Object.assign({}, newSess, { type: "badminton" })); }} style={chipStyle(newSess.type === "badminton", C.green)}>Badminton</button>
+                      <button onClick={function() { setNewSess(Object.assign({}, newSess, { type: "gym" })); }} style={chipStyle(newSess.type === "gym", C.accent)}>Gym</button>
+                    </div>
+                    <button onClick={function() { addSess(addSessDay); }} style={{ width: "100%", padding: "14px", borderRadius: R.md, border: "none", background: newSess.label ? C.accent : C.bgElevated, color: newSess.label ? "#000" : C.textDim, fontSize: "15px", fontWeight: 600, cursor: "pointer", fontFamily: font }}>Lägg till</button>
                   </div>
-                  <button onClick={function() { addSess(addSessDay); }} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "none", background: newSess.label ? "#f4a623" : "rgba(255,255,255,0.05)", color: newSess.label ? "#000" : "#555", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Lägg till</button>
                 </div>
               </div>
             )}
           </div>
         )}
 
-        {/* View log modal */}
-        {viewLog && (
-          <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }} onClick={function() { setViewLog(null); }}>
-            <div onClick={function(e) { e.stopPropagation(); }} style={{ background: "#1a1a24", borderRadius: "16px", padding: "20px", width: "100%", maxWidth: "360px", maxHeight: "80vh", overflowY: "auto" }}>
-              <div style={{ fontSize: "15px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>{viewLog.sessionLabel}</div>
-              <div style={{ fontSize: "11px", color: "#666", marginBottom: "14px" }}>{new Date(viewLog.displayDate || viewLog.date).toLocaleDateString("sv-SE", { weekday: "long", day: "numeric", month: "long" })}</div>
-
-              <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "4px" }}>Status</div>
-              <div style={{ fontSize: "14px", color: viewLog.completed === "yes" ? "#2ecc71" : viewLog.completed === "partial" ? "#f4a623" : "#e74c3c", marginBottom: "12px", fontWeight: 600 }}>
-                {viewLog.completed === "yes" ? "✓ Genomfört" : viewLog.completed === "partial" ? "~ Delvis" : "✗ Inte genomfört"}
-              </div>
-
-              {(function() {
-                var tt = viewLog.trainingType;
-                var ttArr = Array.isArray(tt) ? tt : (tt ? [tt] : []);
-                if (ttArr.length === 0) return null;
-                return (<div>
-                  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "4px" }}>Typ av träning</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: "12px" }}>
-                    {ttArr.map(function(t) { return <span key={t} style={{ fontSize: "12px", color: "#3498db", background: "rgba(52,152,219,0.15)", padding: "3px 8px", borderRadius: "5px", fontWeight: 600 }}>{t}</span>; })}
-                  </div>
-                </div>);
-              })()}
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "12px" }}>
-                <div>
-                  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "4px" }}>Egen insats</div>
-                  <div style={{ fontSize: "22px", fontWeight: 700, color: viewLog.rating >= 4 ? "#2ecc71" : viewLog.rating >= 3 ? "#f4a623" : "#e74c3c" }}>{viewLog.rating || "—"}<span style={{ fontSize: "12px", color: "#555" }}>/5</span></div>
-                </div>
-                <div>
-                  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "4px" }}>Energinivå</div>
-                  <div style={{ fontSize: "22px", fontWeight: 700, color: viewLog.energy >= 4 ? "#2ecc71" : viewLog.energy >= 3 ? "#f4a623" : "#e74c3c" }}>{viewLog.energy || "—"}<span style={{ fontSize: "12px", color: "#555" }}>/5</span></div>
-                </div>
-              </div>
-
-              {viewLog.note && (<div>
-                <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "4px" }}>Anteckning</div>
-                <div style={{ fontSize: "13px", color: "#ccc", background: "rgba(255,255,255,0.04)", padding: "10px", borderRadius: "8px", marginBottom: "12px", fontStyle: "italic" }}>{viewLog.note}</div>
-              </div>)}
-
-              <button onClick={function() {
-                if (window.confirm("Vill du verkligen ta bort denna logg?")) {
-                  var keyToRemove = (viewLog.displayDate || viewLog.date) + "-" + viewLog.sessionId;
-                  var newLogs = Object.assign({}, tLogs);
-                  delete newLogs[keyToRemove];
-                  setTLogs(newLogs);
-                  setViewLog(null);
-                }
-              }} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid rgba(231,76,60,0.3)", background: "rgba(231,76,60,0.08)", color: "#e74c3c", fontSize: "13px", cursor: "pointer", fontFamily: "inherit", marginTop: "8px", fontWeight: 600 }}>Ta bort logg</button>
-              <button onClick={function() { setViewLog(null); }} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid rgba(255,255,255,0.1)", background: "transparent", color: "#888", fontSize: "13px", cursor: "pointer", fontFamily: "inherit", marginTop: "8px" }}>Stäng</button>
-            </div>
-          </div>
-        )}
-
+        {/* LOG TAB */}
         {activeTab === "log" && (
           <div>
-            {/* Date selector */}
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px", background: "rgba(255,255,255,0.03)", padding: "10px 12px", borderRadius: "10px" }}>
-              <div style={{ fontSize: "11px", color: "#8a8a9a", textTransform: "uppercase", letterSpacing: "1px" }}>Dag att logga</div>
-              <input type="date" value={logDate} max={today} onChange={function(e) { setLogDate(e.target.value); }}
-                style={{ flex: 1, padding: "6px 8px", borderRadius: "6px", border: "1px solid #333", background: "rgba(255,255,255,0.05)", color: "#e0e0e0", fontSize: "12px", fontFamily: "inherit" }} />
-              {logDate !== today && (
-                <button onClick={function() { setLogDate(today); }} style={{ padding: "4px 10px", borderRadius: "5px", border: "1px solid rgba(244,166,35,0.3)", background: "transparent", color: "#f4a623", fontSize: "10px", cursor: "pointer", fontFamily: "inherit", fontWeight: 600 }}>Idag</button>
-              )}
+            <div style={Object.assign({}, cardStyle, { display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" })}>
+              <div style={{ fontSize: "13px", color: C.textMuted, fontWeight: 500, whiteSpace: "nowrap" }}>Dag att logga</div>
+              <input type="date" value={logDate} max={today} onChange={function(e) { setLogDate(e.target.value); }} style={Object.assign({}, inputStyle, { padding: "8px 10px", fontSize: "14px" })} />
+              {logDate !== today && (<button onClick={function() { setLogDate(today); }} style={{ padding: "6px 14px", borderRadius: "20px", border: "1px solid rgba(245,183,49,0.3)", background: C.accentDim, color: C.accent, fontSize: "12px", cursor: "pointer", fontFamily: font, fontWeight: 600, whiteSpace: "nowrap" }}>Idag</button>)}
             </div>
-
             {(function() {
-              var selDate = new Date(logDate);
-              var selDayJs = selDate.getDay();
-              var selDayIdx = selDayJs === 0 ? 6 : selDayJs - 1;
-              var selWeekId = getWeekId(selDate);
-              var selDayOverride = weekOv[selWeekId + "-" + selDayIdx];
-              var selDaySessions = selDayOverride || DEFAULT_WEEK[selDayIdx].sessions;
+              var selDate = new Date(logDate); var selDayJs = selDate.getDay(); var selDayIdx = selDayJs === 0 ? 6 : selDayJs - 1;
+              var selWeekId = getWeekId(selDate); var selDayOv = weekOv[selWeekId + "-" + selDayIdx];
+              var selDaySessions = selDayOv || DEFAULT_WEEK[selDayIdx].sessions;
               var isLogToday = logDate === today;
-
               return (<div>
                 {isLogToday && (
-                  <div style={{ marginBottom: "20px" }}>
-                    <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Daglig avstämning</div>
-                    <div style={{ fontSize: "11px", color: "#666", marginBottom: "10px" }}>1 = dåligt, 5 = topp</div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px" }}>
+                  <div style={{ marginBottom: "24px" }}>
+                    <div style={sectionTitle}>Daglig avstämning</div>
+                    <div style={sectionSub}>1 = dåligt, 5 = topp</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                       {WELLNESS_LABELS.map(function(label) {
-                        return (<div key={label} style={{ background: "rgba(255,255,255,0.04)", borderRadius: "8px", padding: "10px" }}>
-                          <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px" }}>{label}</div>
-                          <div style={{ display: "flex", gap: "3px" }}>
-                            {[1,2,3,4,5].map(function(v) { return <button key={v} onClick={function() { var u = Object.assign({}, wLogs); u[today] = Object.assign({}, todayW, {[label]: v}); setWLogs(u); }} style={ratBtn(todayW[label] === v, v)}>{v}</button>; })}
+                        return (<div key={label} style={cardStyle}>
+                          <div style={labelStyle}>{label}</div>
+                          <div style={{ display: "flex", gap: "4px" }}>
+                            {[1,2,3,4,5].map(function(v) { return <button key={v} onClick={function() { var u = Object.assign({}, wLogs); u[today] = Object.assign({}, todayW, {[label]: v}); setWLogs(u); }} style={ratingBtnStyle(todayW[label] === v, v)}>{v}</button>; })}
                           </div>
                         </div>);
                       })}
                     </div>
-                    {wAvg > 0 && wAvg < 3 && (<div style={{ marginTop: "8px", background: "rgba(231,76,60,0.1)", border: "1px solid rgba(231,76,60,0.2)", borderRadius: "8px", padding: "8px 10px", fontSize: "11px", color: "#e74c3c" }}>💡 Överväg lättare pass idag.</div>)}
+                    {wAvg > 0 && wAvg < 3 && (<div style={{ marginTop: "10px", background: C.redDim, border: "1px solid " + C.redBorder, borderRadius: R.md, padding: "10px 14px", fontSize: "13px", color: C.red }}>💡 Överväg lättare pass idag.</div>)}
                   </div>
                 )}
-
-                <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>{isLogToday ? "Dagens pass" : "Pass " + new Date(logDate).toLocaleDateString("sv-SE", { weekday: "long", day: "numeric", month: "long" })}</div>
-                <div style={{ fontSize: "11px", color: "#666", marginBottom: "10px" }}>Klicka för att logga eller se detaljer</div>
+                <div style={sectionTitle}>{isLogToday ? "Dagens pass" : "Pass " + new Date(logDate).toLocaleDateString("sv-SE", { weekday: "long", day: "numeric", month: "long" })}</div>
+                <div style={sectionSub}>Klicka för att logga eller se detaljer</div>
                 {selDaySessions.filter(function(s) { return s.type !== "rest" && !s.cancelled; }).map(function(sess) {
                   var lk = logDate + "-" + sess.id, logged = tLogs[lk];
                   return (<div key={sess.id} onClick={function() {
-                    if (logged) { setViewLog(Object.assign({}, logged, { displayDate: logDate })); }
+                    if (logged) setViewLog(Object.assign({}, logged, { displayDate: logDate }));
                     else { setLogSess(Object.assign({}, sess, { _logDate: logDate })); setLogForm({ completed: "yes", trainingType: [], rating: 0, energy: 0, note: "" }); }
-                  }} style={{
-                    display: "flex", alignItems: "center", gap: "10px", padding: "12px", marginBottom: "6px", borderRadius: "10px",
-                    background: logged ? "rgba(46,204,113,0.08)" : "rgba(255,255,255,0.03)",
-                    border: logged ? "1px solid rgba(46,204,113,0.25)" : "1px solid rgba(255,255,255,0.06)", cursor: "pointer",
-                  }}>
-                    <div style={{ width: "10px", height: "10px", borderRadius: "50%", flexShrink: 0, background: sess.type === "badminton" ? "#2ecc71" : "#f4a623" }} />
-                    <div style={{ flex: 1 }}><div style={{ fontSize: "13px", color: "#e0e0e0", fontWeight: 500 }}>{sess.label}</div><div style={{ fontSize: "11px", color: "#666" }}>{sess.time}</div></div>
-                    {logged ? (<div style={{ display: "flex", alignItems: "center", gap: "6px" }}><span style={{ fontSize: "11px", color: "#2ecc71" }}>✓ Loggat</span>{logged.rating > 0 && <span style={{ fontSize: "11px", color: "#f4a623" }}>★{logged.rating}</span>}</div>) : (<div style={{ fontSize: "11px", color: "#f4a623" }}>Logga →</div>)}
+                  }} style={Object.assign({}, cardStyle, { display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", background: logged ? C.greenDim : C.bgCard, border: logged ? "1px solid " + C.greenBorder : "1px solid " + C.borderLight })}>
+                    <div style={{ width: "10px", height: "10px", borderRadius: "50%", flexShrink: 0, background: sess.type === "badminton" ? C.green : C.accent }} />
+                    <div style={{ flex: 1 }}><div style={{ fontSize: "15px", color: C.text, fontWeight: 500 }}>{sess.label}</div><div style={{ fontSize: "12px", color: C.textMuted, marginTop: "2px" }}>{sess.time}</div></div>
+                    {logged ? (<div style={{ display: "flex", alignItems: "center", gap: "8px" }}><span style={{ fontSize: "13px", color: C.green, fontWeight: 600 }}>✓ Loggat</span>{logged.rating > 0 && <span style={{ fontSize: "13px", color: C.accent, fontWeight: 600 }}>★{logged.rating}</span>}</div>) : (<div style={{ fontSize: "13px", color: C.accent, fontWeight: 500 }}>Logga →</div>)}
                   </div>);
                 })}
-
                 {selDaySessions.some(function(s) { return s.type === "gym" && !s.cancelled; }) && isLogToday && (
-                  <div style={{ marginTop: "16px" }}>
-                    <div style={{ fontSize: "14px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Gympass</div>
-                    <div style={{ fontSize: "11px", color: "#666", marginBottom: "10px" }}>{isTaper ? "⚡ Tävlingsvecka: 60% vikt" : "Logga vikter"}</div>
+                  <div style={{ marginTop: "20px" }}>
+                    <div style={sectionTitle}>Gympass</div>
+                    <div style={sectionSub}>{isTaper ? "⚡ Tävlingsvecka: 60% vikt" : "Logga vikter"}</div>
                     <GymLog exercises={GYM_EXERCISES} log={todayGym} setLog={function(fn) { var u = typeof fn === "function" ? fn(todayGym) : fn; var g = Object.assign({}, gLogs); g[today] = u; setGLogs(g); }} />
                   </div>
                 )}
-
-                {selDaySessions.every(function(s) { return s.type === "rest" || s.cancelled; }) && (
-                  <div style={{ textAlign: "center", padding: "30px 0", color: "#555", fontSize: "13px" }}>Vilodag 🧘</div>
-                )}
+                {selDaySessions.every(function(s) { return s.type === "rest" || s.cancelled; }) && (<div style={{ textAlign: "center", padding: "40px 0", color: C.textDim, fontSize: "15px" }}>Vilodag 🧘</div>)}
               </div>);
             })()}
-
             {logSess && (
-              <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }} onClick={function() { setLogSess(null); }}>
-                <div onClick={function(e) { e.stopPropagation(); }} style={{ background: "#1a1a24", borderRadius: "16px", padding: "20px", width: "100%", maxWidth: "360px", maxHeight: "80vh", overflowY: "auto" }}>
-                  <div style={{ fontSize: "15px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Logga: {logSess.label}</div>
-                  <div style={{ fontSize: "11px", color: "#666", marginBottom: "14px" }}>
+              <div style={modalOverlay} onClick={function() { setLogSess(null); }}>
+                <div onClick={function(e) { e.stopPropagation(); }} style={modalBox}>
+                  <div style={sectionTitle}>Logga: {logSess.label}</div>
+                  <div style={Object.assign({}, sectionSub, { marginBottom: "18px" })}>
                     {logSess.time}
-                    {logSess._logDate && logSess._logDate !== today && (
-                      <span style={{ color: "#f4a623", marginLeft: "8px" }}>• {new Date(logSess._logDate).toLocaleDateString("sv-SE", { weekday: "short", day: "numeric", month: "short" })}</span>
-                    )}
+                    {logSess._logDate && logSess._logDate !== today && (<span style={{ color: C.accent, marginLeft: "8px" }}>• {new Date(logSess._logDate).toLocaleDateString("sv-SE", { weekday: "short", day: "numeric", month: "short" })}</span>)}
                   </div>
-                  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px" }}>Blev passet av?</div>
-                  <div style={{ display: "flex", gap: "6px", marginBottom: "14px" }}>
-                    {[{ v: "yes", l: "Ja" }, { v: "partial", l: "Delvis" }, { v: "no", l: "Nej" }].map(function(o) { return <button key={o.v} onClick={function() { setLogForm(Object.assign({}, logForm, { completed: o.v })); }} style={pill(logForm.completed === o.v, o.v === "yes" ? "#2ecc71" : o.v === "partial" ? "#f4a623" : "#e74c3c")}>{o.l}</button>; })}
+                  <div style={labelStyle}>Blev passet av?</div>
+                  <div style={{ display: "flex", gap: "8px", marginBottom: "18px" }}>
+                    {[{ v: "yes", l: "Ja", c: C.green }, { v: "partial", l: "Delvis", c: C.yellow }, { v: "no", l: "Nej", c: C.red }].map(function(o) { return <button key={o.v} onClick={function() { setLogForm(Object.assign({}, logForm, { completed: o.v })); }} style={chipStyle(logForm.completed === o.v, o.c)}>{o.l}</button>; })}
                   </div>
                   {logSess.type === "badminton" && (<div>
-                    <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px" }}>Typ av träning</div>
-                    <div style={{ display: "flex", flexWrap: "wrap", gap: "5px", marginBottom: "14px" }}>
+                    <div style={labelStyle}>Typ av träning</div>
+                    <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "18px" }}>
                       {TRAINING_TYPES.map(function(t) {
-                        var ttArr = Array.isArray(logForm.trainingType) ? logForm.trainingType : (logForm.trainingType ? [logForm.trainingType] : []);
-                        var selected = ttArr.indexOf(t) !== -1;
-                        return <button key={t} onClick={function() {
-                          var newArr = selected ? ttArr.filter(function(x) { return x !== t; }) : ttArr.concat([t]);
-                          setLogForm(Object.assign({}, logForm, { trainingType: newArr }));
-                        }} style={Object.assign({}, pill(selected, "#3498db"), { flex: "0 0 auto", padding: "6px 12px" })}>{t}</button>;
+                        var ttArr = Array.isArray(logForm.trainingType) ? logForm.trainingType : []; var sel = ttArr.indexOf(t) !== -1;
+                        return <button key={t} onClick={function() { setLogForm(Object.assign({}, logForm, { trainingType: sel ? ttArr.filter(function(x){return x!==t;}) : ttArr.concat([t]) })); }} style={chipStyle(sel, C.blue)}>{t}</button>;
                       })}
                     </div>
                   </div>)}
-                  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px" }}>Egen insats</div>
-                  <div style={{ display: "flex", gap: "4px", marginBottom: "14px" }}>{[1,2,3,4,5].map(function(v) { return <button key={v} onClick={function() { setLogForm(Object.assign({}, logForm, { rating: v })); }} style={ratBtn(logForm.rating === v, v)}>{v}</button>; })}</div>
-                  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px" }}>Energinivå</div>
-                  <div style={{ display: "flex", gap: "4px", marginBottom: "14px" }}>{[1,2,3,4,5].map(function(v) { return <button key={v} onClick={function() { setLogForm(Object.assign({}, logForm, { energy: v })); }} style={ratBtn(logForm.energy === v, v)}>{v}</button>; })}</div>
-                  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px" }}>Anteckning</div>
-                  <textarea value={logForm.note} onChange={function(e) { setLogForm(Object.assign({}, logForm, { note: e.target.value })); }} placeholder="Valfritt..." style={Object.assign({}, inp, { height: "60px", resize: "none", marginBottom: "14px" })} />
-                  <button onClick={saveTLog} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "none", background: "#2ecc71", color: "#000", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Spara</button>
+                  <div style={labelStyle}>Egen insats</div>
+                  <div style={{ display: "flex", gap: "6px", marginBottom: "18px" }}>{[1,2,3,4,5].map(function(v) { return <button key={v} onClick={function() { setLogForm(Object.assign({}, logForm, { rating: v })); }} style={ratingBtnStyle(logForm.rating === v, v)}>{v}</button>; })}</div>
+                  <div style={labelStyle}>Energinivå</div>
+                  <div style={{ display: "flex", gap: "6px", marginBottom: "18px" }}>{[1,2,3,4,5].map(function(v) { return <button key={v} onClick={function() { setLogForm(Object.assign({}, logForm, { energy: v })); }} style={ratingBtnStyle(logForm.energy === v, v)}>{v}</button>; })}</div>
+                  <div style={labelStyle}>Anteckning</div>
+                  <textarea value={logForm.note} onChange={function(e) { setLogForm(Object.assign({}, logForm, { note: e.target.value })); }} placeholder="Valfritt..." style={Object.assign({}, inputStyle, { height: "70px", resize: "none", marginBottom: "18px" })} />
+                  <button onClick={saveTLog} style={{ width: "100%", padding: "14px", borderRadius: R.md, border: "none", background: C.green, color: "#000", fontSize: "16px", fontWeight: 700, cursor: "pointer", fontFamily: font }}>Spara</button>
                 </div>
               </div>
             )}
           </div>
         )}
 
+        {/* STATS TAB */}
         {activeTab === "stats" && (function() {
-          var allTLogs = Object.values(tLogs);
-          var allMLogs = Object.values(mLogs);
-          var fTLogs = filterByPeriod(allTLogs, "date");
-          var fMLogs = filterByPeriod(allMLogs, "date");
-
+          var fTLogs = filterByPeriod(Object.values(tLogs), "date");
+          var fMLogs = filterByPeriod(Object.values(mLogs), "date");
           var badLogs = fTLogs.filter(function(l) { return l.sessionType === "badminton"; });
           var gymLogs2 = fTLogs.filter(function(l) { return l.sessionType === "gym"; });
-          var seriesMatches = fMLogs.filter(function(l) { return l.compType === "series"; });
-          var tournMatches = fMLogs.filter(function(l) { return l.compType === "tournament"; });
-
-          function matchStats(matches) {
-            var won = matches.filter(function(m) { return m.won === true; }).length;
-            var lost = matches.filter(function(m) { return m.won === false; }).length;
-            var byType = {}; MATCH_TYPES.forEach(function(t) { byType[t] = matches.filter(function(m) { return m.matchType === t; }); });
-            return { total: matches.length, won: won, lost: lost, byType: byType };
-          }
-
+          var seriesM = fMLogs.filter(function(l) { return l.compType === "series"; });
+          var tournM = fMLogs.filter(function(l) { return l.compType === "tournament"; });
+          function ms(matches) { var w = matches.filter(function(m){return m.won===true;}).length; return { total: matches.length, won: w, lost: matches.filter(function(m){return m.won===false;}).length, byType: MATCH_TYPES.reduce(function(o,t){ o[t] = matches.filter(function(m){return m.matchType===t;}); return o; }, {}) }; }
           return (
             <div>
-              <div style={{ fontSize: "16px", fontWeight: 700, color: "#fff", marginBottom: "10px" }}>Statistik</div>
-
-              <div style={{ display: "flex", gap: "4px", marginBottom: "12px", flexWrap: "wrap" }}>
-                {[{ v: "week", l: "Vecka" }, { v: "month", l: "Månad" }, { v: "year", l: "År" }, { v: "custom", l: "Anpassad" }].map(function(f) {
-                  return <button key={f.v} onClick={function() { setStatsFilter(f.v); }} style={Object.assign({}, pill(statsFilter === f.v), { flex: "0 0 auto", padding: "6px 12px" })}>{f.l}</button>;
-                })}
+              <div style={sectionTitle}>Statistik</div>
+              <div style={{ display: "flex", gap: "6px", marginBottom: "14px", flexWrap: "wrap" }}>
+                {[{ v: "week", l: "Vecka" }, { v: "month", l: "Månad" }, { v: "year", l: "År" }, { v: "custom", l: "Anpassad" }].map(function(f) { return <button key={f.v} onClick={function() { setStatsFilter(f.v); }} style={chipStyle(statsFilter === f.v)}>{f.l}</button>; })}
               </div>
-              {statsFilter === "custom" && (
-                <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
-                  <input type="date" value={customDates.from} onChange={function(e) { setCustomDates(Object.assign({}, customDates, { from: e.target.value })); }} style={Object.assign({}, inp, { fontSize: "11px" })} />
-                  <input type="date" value={customDates.to} onChange={function(e) { setCustomDates(Object.assign({}, customDates, { to: e.target.value })); }} style={Object.assign({}, inp, { fontSize: "11px" })} />
-                </div>
-              )}
-
-              <div style={{ display: "flex", gap: "4px", marginBottom: "16px" }}>
-                {[{ v: "badminton", l: "Badminton", c: "#2ecc71" }, { v: "gym", l: "Gym", c: "#f4a623" }, { v: "series", l: "Seriespel", c: "#3498db" }, { v: "tournament", l: "Tävlingar", c: "#e74c3c" }].map(function(t) {
-                  return <button key={t.v} onClick={function() { setStatsTab(t.v); }} style={Object.assign({}, pill(statsTab === t.v, t.c), { fontSize: "10px", padding: "6px 4px" })}>{t.l}</button>;
-                })}
+              {statsFilter === "custom" && (<div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
+                <input type="date" value={customDates.from} onChange={function(e) { setCustomDates(Object.assign({}, customDates, { from: e.target.value })); }} style={Object.assign({}, inputStyle, { fontSize: "13px" })} />
+                <input type="date" value={customDates.to} onChange={function(e) { setCustomDates(Object.assign({}, customDates, { to: e.target.value })); }} style={Object.assign({}, inputStyle, { fontSize: "13px" })} />
+              </div>)}
+              <div style={{ display: "flex", gap: "6px", marginBottom: "20px" }}>
+                {[{ v: "badminton", l: "Badminton", c: C.green }, { v: "gym", l: "Gym", c: C.accent }, { v: "series", l: "Seriespel", c: C.blue }, { v: "tournament", l: "Tävlingar", c: C.red }].map(function(t) { return <button key={t.v} onClick={function() { setStatsTab(t.v); }} style={Object.assign({}, chipStyle(statsTab === t.v, t.c), { fontSize: "12px" })}>{t.l}</button>; })}
               </div>
 
-              {statsTab === "badminton" && (
-                <div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "16px" }}>
-                    {[{ l: "Träningar", v: badLogs.length, c: "#2ecc71" }, { l: "Genomförda", v: badLogs.filter(function(l) { return l.completed === "yes"; }).length, c: "#3498db" },
-                      { l: "Snittinsats", v: badLogs.length > 0 ? (badLogs.reduce(function(s,l) { return s + (l.rating||0); }, 0) / badLogs.length).toFixed(1) : "—", c: "#f4a623" },
-                      { l: "Snittenergi", v: badLogs.length > 0 ? (badLogs.reduce(function(s,l) { return s + (l.energy||0); }, 0) / badLogs.length).toFixed(1) : "—", c: "#9b59b6" },
-                    ].map(function(s) {
-                      return (<div key={s.l} style={{ background: "rgba(255,255,255,0.03)", borderRadius: "10px", padding: "14px", textAlign: "center" }}>
-                        <div style={{ fontSize: "24px", fontWeight: 700, color: s.c }}>{s.v}</div>
-                        <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#666", marginTop: "4px" }}>{s.l}</div>
-                      </div>);
-                    })}
-                  </div>
-                  {(function() {
-                    var tc = {}; badLogs.forEach(function(l) {
-                      var tt = l.trainingType;
-                      var ttArr = Array.isArray(tt) ? tt : (tt ? [tt] : []);
-                      ttArr.forEach(function(t) { tc[t] = (tc[t]||0) + 1; });
-                    });
-                    var total = Object.values(tc).reduce(function(s,c) { return s+c; }, 0);
-                    if (total === 0) return null;
-                    return (<div style={{ marginBottom: "16px" }}>
-                      <div style={{ fontSize: "12px", fontWeight: 600, color: "#aaa", marginBottom: "8px" }}>Träningstyper</div>
-                      {Object.entries(tc).sort(function(a,b) { return b[1]-a[1]; }).map(function(e) {
-                        var pct = Math.round(e[1]/total*100);
-                        return (<div key={e[0]} style={{ marginBottom: "6px" }}>
-                          <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "3px" }}>
-                            <span style={{ fontSize: "12px", color: "#ccc" }}>{e[0]}</span><span style={{ fontSize: "11px", color: "#888" }}>{e[1]}st ({pct}%)</span>
-                          </div>
-                          <div style={{ height: "5px", background: "rgba(255,255,255,0.06)", borderRadius: "3px", overflow: "hidden" }}><div style={{ width: pct+"%", height: "100%", background: "#2ecc71", borderRadius: "3px" }} /></div>
-                        </div>);
-                      })}
-                    </div>);
-                  })()}
-                  {badLogs.length === 0 && <div style={{ textAlign: "center", padding: "30px 0", color: "#555", fontSize: "13px" }}>Ingen badmintondata för vald period</div>}
+              {statsTab === "badminton" && (<div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "18px" }}>
+                  <StatCard label="Träningar" value={badLogs.length} color={C.green} />
+                  <StatCard label="Genomförda" value={badLogs.filter(function(l){return l.completed==="yes";}).length} color={C.blue} />
+                  <StatCard label="Snittinsats" value={badLogs.length > 0 ? (badLogs.reduce(function(s,l){return s+(l.rating||0);},0)/badLogs.length).toFixed(1) : "—"} color={C.accent} />
+                  <StatCard label="Snittenergi" value={badLogs.length > 0 ? (badLogs.reduce(function(s,l){return s+(l.energy||0);},0)/badLogs.length).toFixed(1) : "—"} color={C.purple} />
                 </div>
-              )}
+                {(function() {
+                  var tc = {}; badLogs.forEach(function(l) { var tt = Array.isArray(l.trainingType) ? l.trainingType : (l.trainingType ? [l.trainingType] : []); tt.forEach(function(t) { tc[t] = (tc[t]||0) + 1; }); });
+                  var total = Object.values(tc).reduce(function(s,c){return s+c;}, 0);
+                  if (total === 0) return null;
+                  return (<div style={{ marginBottom: "18px" }}><div style={Object.assign({}, labelStyle, { marginBottom: "10px" })}>Träningstyper</div>
+                    {Object.entries(tc).sort(function(a,b){return b[1]-a[1];}).map(function(e) { var pct = Math.round(e[1]/total*100);
+                      return (<div key={e[0]} style={{ marginBottom: "10px" }}><div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}><span style={{ fontSize: "13px", color: C.text }}>{e[0]}</span><span style={{ fontSize: "13px", color: C.textMuted }}>{e[1]}st ({pct}%)</span></div>
+                        <div style={{ height: "6px", background: C.bgElevated, borderRadius: "3px", overflow: "hidden" }}><div style={{ width: pct+"%", height: "100%", background: C.green, borderRadius: "3px" }} /></div></div>);
+                    })}</div>);
+                })()}
+                {badLogs.length === 0 && <div style={{ textAlign: "center", padding: "40px 0", color: C.textDim, fontSize: "14px" }}>Ingen badmintondata för vald period</div>}
+              </div>)}
 
-              {statsTab === "gym" && (
-                <div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "8px", marginBottom: "16px" }}>
-                    <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: "10px", padding: "14px", textAlign: "center" }}>
-                      <div style={{ fontSize: "24px", fontWeight: 700, color: "#f4a623" }}>{gymLogs2.length}</div>
-                      <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#666", marginTop: "4px" }}>Gympass</div>
-                    </div>
-                    <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: "10px", padding: "14px", textAlign: "center" }}>
-                      <div style={{ fontSize: "24px", fontWeight: 700, color: "#2ecc71" }}>{gymLogs2.filter(function(l) { return l.completed === "yes"; }).length}</div>
-                      <div style={{ fontSize: "10px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#666", marginTop: "4px" }}>Genomförda</div>
-                    </div>
-                  </div>
-                  {gymLogs2.length === 0 && <div style={{ textAlign: "center", padding: "30px 0", color: "#555", fontSize: "13px" }}>Ingen gymdata för vald period</div>}
+              {statsTab === "gym" && (<div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "18px" }}>
+                  <StatCard label="Gympass" value={gymLogs2.length} color={C.accent} />
+                  <StatCard label="Genomförda" value={gymLogs2.filter(function(l){return l.completed==="yes";}).length} color={C.green} />
                 </div>
-              )}
+                {gymLogs2.length === 0 && <div style={{ textAlign: "center", padding: "40px 0", color: C.textDim, fontSize: "14px" }}>Ingen gymdata för vald period</div>}
+              </div>)}
 
-              {statsTab === "series" && (function() {
-                var ms = matchStats(seriesMatches);
-                return (
-                  <div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "16px" }}>
-                      <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: "10px", padding: "14px", textAlign: "center" }}>
-                        <div style={{ fontSize: "24px", fontWeight: 700, color: "#3498db" }}>{ms.total}</div>
-                        <div style={{ fontSize: "9px", textTransform: "uppercase", color: "#666", marginTop: "4px" }}>Matcher</div>
-                      </div>
-                      <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: "10px", padding: "14px", textAlign: "center" }}>
-                        <div style={{ fontSize: "24px", fontWeight: 700, color: "#2ecc71" }}>{ms.won}</div>
-                        <div style={{ fontSize: "9px", textTransform: "uppercase", color: "#666", marginTop: "4px" }}>Vinster</div>
-                      </div>
-                      <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: "10px", padding: "14px", textAlign: "center" }}>
-                        <div style={{ fontSize: "24px", fontWeight: 700, color: "#e74c3c" }}>{ms.lost}</div>
-                        <div style={{ fontSize: "9px", textTransform: "uppercase", color: "#666", marginTop: "4px" }}>Förluster</div>
-                      </div>
-                    </div>
-                    {MATCH_TYPES.map(function(mt) {
-                      var m = ms.byType[mt]; if (m.length === 0) return null;
-                      var w = m.filter(function(x) { return x.won; }).length;
-                      return (<div key={mt} style={{ marginBottom: "8px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#ccc", marginBottom: "4px" }}><span>{mt}</span><span>{w}V / {m.length - w}F</span></div>
-                        <div style={{ height: "5px", background: "rgba(255,255,255,0.06)", borderRadius: "3px", overflow: "hidden" }}>
-                          <div style={{ width: (m.length > 0 ? (w/m.length*100) : 0)+"%", height: "100%", background: "#2ecc71", borderRadius: "3px" }} />
-                        </div>
-                      </div>);
-                    })}
-                    {seriesMatches.length > 0 && (<div style={{ marginTop: "12px" }}>
-                      <div style={{ fontSize: "12px", fontWeight: 600, color: "#aaa", marginBottom: "8px" }}>Matchhistorik</div>
-                      {seriesMatches.slice().reverse().map(function(m, i) {
-                        var setStr = m.sets.filter(function(s) { return s.my || s.opp; }).map(function(s) { return s.my + "-" + s.opp; }).join(", ");
-                        return (<div key={i} style={{ padding: "8px 10px", marginBottom: "4px", borderRadius: "8px", background: "rgba(255,255,255,0.03)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <div><div style={{ fontSize: "12px", color: "#ccc" }}>{m.matchType} — {m.compName}</div><div style={{ fontSize: "10px", color: "#666" }}>{m.opponent ? "vs " + m.opponent + " — " : ""}{setStr}</div></div>
-                          <div style={{ fontSize: "11px", fontWeight: 700, color: m.won ? "#2ecc71" : "#e74c3c" }}>{m.won ? "V" : "F"}</div>
-                        </div>);
-                      })}
-                    </div>)}
-                    {ms.total === 0 && <div style={{ textAlign: "center", padding: "30px 0", color: "#555", fontSize: "13px" }}>Inga seriematcher för vald period</div>}
+              {(statsTab === "series" || statsTab === "tournament") && (function() {
+                var matches = statsTab === "series" ? seriesM : tournM;
+                var mst = ms(matches);
+                return (<div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "18px" }}>
+                    <StatCard label="Matcher" value={mst.total} color={statsTab === "series" ? C.blue : C.red} />
+                    <StatCard label="Vinster" value={mst.won} color={C.green} />
+                    <StatCard label="Förluster" value={mst.lost} color={C.red} />
                   </div>
-                );
+                  {MATCH_TYPES.map(function(mt) { var m = mst.byType[mt]; if (m.length === 0) return null; var w = m.filter(function(x){return x.won;}).length;
+                    return (<div key={mt} style={{ marginBottom: "10px" }}><div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: C.textSecondary, marginBottom: "4px" }}><span>{mt}</span><span>{w}V / {m.length-w}F</span></div>
+                      <div style={{ height: "6px", background: C.bgElevated, borderRadius: "3px", overflow: "hidden" }}><div style={{ width: (m.length>0?(w/m.length*100):0)+"%", height: "100%", background: C.green, borderRadius: "3px" }} /></div></div>);
+                  })}
+                  {matches.length > 0 && (<div style={{ marginTop: "18px" }}><div style={Object.assign({}, labelStyle, { marginBottom: "10px" })}>Matchhistorik</div>
+                    {matches.slice().reverse().map(function(m, i) { var setStr = m.sets.filter(function(s){return s.my||s.opp;}).map(function(s){return s.my+"-"+s.opp;}).join(", ");
+                      return (<div key={i} style={Object.assign({}, cardStyle, { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px" })}>
+                        <div><div style={{ fontSize: "13px", color: C.text }}>{m.matchType} — {m.compName}</div><div style={{ fontSize: "11px", color: C.textMuted, marginTop: "2px" }}>{m.opponent ? "vs " + m.opponent + " — " : ""}{setStr}</div></div>
+                        <div style={{ fontSize: "14px", fontWeight: 700, color: m.won ? C.green : C.red }}>{m.won ? "V" : "F"}</div></div>);
+                    })}</div>)}
+                  {mst.total === 0 && <div style={{ textAlign: "center", padding: "40px 0", color: C.textDim, fontSize: "14px" }}>Inga {statsTab === "series" ? "seriematcher" : "tävlingsmatcher"} för vald period</div>}
+                </div>);
               })()}
 
-              {statsTab === "tournament" && (function() {
-                var ms = matchStats(tournMatches);
-                return (
-                  <div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px", marginBottom: "16px" }}>
-                      <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: "10px", padding: "14px", textAlign: "center" }}>
-                        <div style={{ fontSize: "24px", fontWeight: 700, color: "#e74c3c" }}>{ms.total}</div>
-                        <div style={{ fontSize: "9px", textTransform: "uppercase", color: "#666", marginTop: "4px" }}>Matcher</div>
-                      </div>
-                      <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: "10px", padding: "14px", textAlign: "center" }}>
-                        <div style={{ fontSize: "24px", fontWeight: 700, color: "#2ecc71" }}>{ms.won}</div>
-                        <div style={{ fontSize: "9px", textTransform: "uppercase", color: "#666", marginTop: "4px" }}>Vinster</div>
-                      </div>
-                      <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: "10px", padding: "14px", textAlign: "center" }}>
-                        <div style={{ fontSize: "24px", fontWeight: 700, color: "#e74c3c" }}>{ms.lost}</div>
-                        <div style={{ fontSize: "9px", textTransform: "uppercase", color: "#666", marginTop: "4px" }}>Förluster</div>
-                      </div>
-                    </div>
-                    {MATCH_TYPES.map(function(mt) {
-                      var m = ms.byType[mt]; if (m.length === 0) return null;
-                      var w = m.filter(function(x) { return x.won; }).length;
-                      return (<div key={mt} style={{ marginBottom: "8px" }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", fontSize: "12px", color: "#ccc", marginBottom: "4px" }}><span>{mt}</span><span>{w}V / {m.length - w}F</span></div>
-                        <div style={{ height: "5px", background: "rgba(255,255,255,0.06)", borderRadius: "3px", overflow: "hidden" }}>
-                          <div style={{ width: (m.length > 0 ? (w/m.length*100) : 0)+"%", height: "100%", background: "#2ecc71", borderRadius: "3px" }} />
-                        </div>
-                      </div>);
-                    })}
-                    {tournMatches.length > 0 && (<div style={{ marginTop: "12px" }}>
-                      <div style={{ fontSize: "12px", fontWeight: 600, color: "#aaa", marginBottom: "8px" }}>Matchhistorik</div>
-                      {tournMatches.slice().reverse().map(function(m, i) {
-                        var setStr = m.sets.filter(function(s) { return s.my || s.opp; }).map(function(s) { return s.my + "-" + s.opp; }).join(", ");
-                        return (<div key={i} style={{ padding: "8px 10px", marginBottom: "4px", borderRadius: "8px", background: "rgba(255,255,255,0.03)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          <div><div style={{ fontSize: "12px", color: "#ccc" }}>{m.matchType} — {m.compName}</div><div style={{ fontSize: "10px", color: "#666" }}>{m.opponent ? "vs " + m.opponent + " — " : ""}{setStr}</div></div>
-                          <div style={{ fontSize: "11px", fontWeight: 700, color: m.won ? "#2ecc71" : "#e74c3c" }}>{m.won ? "V" : "F"}</div>
-                        </div>);
-                      })}
-                    </div>)}
-                    {ms.total === 0 && <div style={{ textAlign: "center", padding: "30px 0", color: "#555", fontSize: "13px" }}>Inga tävlingsmatcher för vald period</div>}
-                  </div>
-                );
-              })()}
-
-              {/* Latest logged sessions */}
+              {/* Latest logs */}
               {(function() {
-                var filteredLogs = filterByPeriod(Object.values(tLogs), "date");
+                var filtered = filterByPeriod(Object.values(tLogs), "date");
                 var typeMatch = statsTab === "badminton" ? "badminton" : statsTab === "gym" ? "gym" : null;
-                var latestLogs = typeMatch ? filteredLogs.filter(function(l) { return l.sessionType === typeMatch; }) : [];
-                latestLogs = latestLogs.sort(function(a, b) { return new Date(b.date) - new Date(a.date); }).slice(0, 15);
-                if (latestLogs.length === 0) return null;
-                return (
-                  <div style={{ marginTop: "24px" }}>
-                    <div style={{ fontSize: "12px", fontWeight: 600, color: "#aaa", marginBottom: "8px" }}>Senaste loggade pass</div>
-                    {latestLogs.map(function(log, i) {
-                      return (
-                        <div key={i} onClick={function() { setViewLog(log); }} style={{
-                          display: "flex", alignItems: "center", gap: "10px", padding: "10px 12px", marginBottom: "4px", borderRadius: "8px",
-                          background: "rgba(255,255,255,0.03)", cursor: "pointer",
-                        }}>
-                          <div style={{ width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0, background: log.sessionType === "badminton" ? "#2ecc71" : "#f4a623" }} />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ fontSize: "12px", color: "#e0e0e0", fontWeight: 500 }}>{log.sessionLabel}</div>
-                            <div style={{ fontSize: "10px", color: "#666" }}>
-                              {new Date(log.date).toLocaleDateString("sv-SE", { weekday: "short", day: "numeric", month: "short" })}
-                              {(function() {
-                                var tt = log.trainingType;
-                                var ttArr = Array.isArray(tt) ? tt : (tt ? [tt] : []);
-                                return ttArr.length > 0 ? " — " + ttArr.join(", ") : "";
-                              })()}
-                            </div>
-                          </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                            {log.rating > 0 && <span style={{ fontSize: "11px", color: "#f4a623" }}>★{log.rating}</span>}
-                            <span style={{ fontSize: "11px", color: log.completed === "yes" ? "#2ecc71" : log.completed === "partial" ? "#f4a623" : "#e74c3c" }}>
-                              {log.completed === "yes" ? "✓" : log.completed === "partial" ? "~" : "✗"}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
+                var latest = typeMatch ? filtered.filter(function(l){return l.sessionType === typeMatch;}) : [];
+                latest = latest.sort(function(a,b){return new Date(b.date)-new Date(a.date);}).slice(0, 15);
+                if (latest.length === 0) return null;
+                return (<div style={{ marginTop: "24px" }}>
+                  <div style={Object.assign({}, labelStyle, { marginBottom: "10px" })}>Senaste loggade pass</div>
+                  {latest.map(function(log, i) {
+                    return (<div key={i} onClick={function(){ setViewLog(log); }} style={Object.assign({}, cardStyle, { display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", padding: "12px 14px" })}>
+                      <div style={{ width: "8px", height: "8px", borderRadius: "50%", flexShrink: 0, background: log.sessionType === "badminton" ? C.green : C.accent }} />
+                      <div style={{ flex: 1 }}><div style={{ fontSize: "13px", color: C.text, fontWeight: 500 }}>{log.sessionLabel}</div>
+                        <div style={{ fontSize: "11px", color: C.textMuted, marginTop: "2px" }}>{new Date(log.date).toLocaleDateString("sv-SE", { weekday: "short", day: "numeric", month: "short" })}
+                          {(function(){ var tt = Array.isArray(log.trainingType) ? log.trainingType : (log.trainingType ? [log.trainingType] : []); return tt.length > 0 ? " — " + tt.join(", ") : ""; })()}
+                        </div></div>
+                      <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                        {log.rating > 0 && <span style={{ fontSize: "12px", color: C.accent, fontWeight: 600 }}>★{log.rating}</span>}
+                        <span style={{ fontSize: "12px", color: log.completed === "yes" ? C.green : log.completed === "partial" ? C.yellow : C.red, fontWeight: 600 }}>{log.completed === "yes" ? "✓" : log.completed === "partial" ? "~" : "✗"}</span>
+                      </div></div>);
+                  })}</div>);
               })()}
             </div>
           );
         })()}
 
+        {/* CALENDAR TAB */}
         {activeTab === "calendar" && (
           <div>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-              <div>
-                <div style={{ fontSize: "16px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Tävlingskalender</div>
-                <div style={{ fontSize: "12px", color: "#666" }}>Tryck på tävling för att logga matcher</div>
-              </div>
-              <button onClick={function() { setShowAddComp(!showAddComp); }} style={{ width: "36px", height: "36px", borderRadius: "10px", border: "1px solid rgba(244,166,35,0.3)", background: showAddComp ? "rgba(244,166,35,0.15)" : "transparent", color: "#f4a623", fontSize: "20px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{showAddComp ? "×" : "+"}</button>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
+              <div><div style={sectionTitle}>Tävlingskalender</div><div style={sectionSub}>Tryck på tävling för att logga matcher</div></div>
+              <button onClick={function() { setShowAddComp(!showAddComp); }} style={{ width: "40px", height: "40px", borderRadius: R.md, border: "1px solid rgba(245,183,49,0.3)", background: showAddComp ? C.accentDim : "transparent", color: C.accent, fontSize: "22px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{showAddComp ? "×" : "+"}</button>
             </div>
             {showAddComp && (
-              <div style={{ background: "rgba(255,255,255,0.04)", borderRadius: "12px", padding: "14px", marginBottom: "16px", border: "1px solid rgba(244,166,35,0.15)" }}>
-                <input type="text" placeholder="Namn" value={newComp.name} onChange={function(e) { setNewComp(Object.assign({}, newComp, { name: e.target.value })); }} style={Object.assign({}, inp, { marginBottom: "8px" })} />
-                <input type="date" value={newComp.date} onChange={function(e) { setNewComp(Object.assign({}, newComp, { date: e.target.value })); }} style={Object.assign({}, inp, { marginBottom: "8px" })} />
-                <div style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
-                  <button onClick={function() { setNewComp(Object.assign({}, newComp, { type: "tournament" })); }} style={pill(newComp.type === "tournament")}>Tävling 🏆</button>
-                  <button onClick={function() { setNewComp(Object.assign({}, newComp, { type: "series" })); }} style={pill(newComp.type === "series")}>Seriespel 🏸</button>
+              <div style={Object.assign({}, cardStyle, { border: "1px solid rgba(245,183,49,0.15)", marginBottom: "18px" })}>
+                <input type="text" placeholder="Namn" value={newComp.name} onChange={function(e) { setNewComp(Object.assign({}, newComp, { name: e.target.value })); }} style={Object.assign({}, inputStyle, { marginBottom: "10px" })} />
+                <input type="date" value={newComp.date} onChange={function(e) { setNewComp(Object.assign({}, newComp, { date: e.target.value })); }} style={Object.assign({}, inputStyle, { marginBottom: "10px" })} />
+                <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
+                  <button onClick={function() { setNewComp(Object.assign({}, newComp, { type: "tournament" })); }} style={chipStyle(newComp.type === "tournament")}>Tävling 🏆</button>
+                  <button onClick={function() { setNewComp(Object.assign({}, newComp, { type: "series" })); }} style={chipStyle(newComp.type === "series")}>Seriespel 🏸</button>
                 </div>
-                <button onClick={function() { if (newComp.name && newComp.date) { setCompetitions(competitions.concat([Object.assign({}, newComp)])); setNewComp({ name: "", date: "", type: "tournament" }); setShowAddComp(false); } }} style={{ width: "100%", padding: "10px", borderRadius: "8px", border: "none", background: newComp.name && newComp.date ? "#f4a623" : "rgba(255,255,255,0.05)", color: newComp.name && newComp.date ? "#000" : "#555", fontSize: "13px", fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>Lägg till</button>
+                <button onClick={function() { if (newComp.name && newComp.date) { setCompetitions(competitions.concat([Object.assign({}, newComp)])); setNewComp({ name: "", date: "", type: "tournament" }); setShowAddComp(false); } }} style={{ width: "100%", padding: "14px", borderRadius: R.md, border: "none", background: newComp.name && newComp.date ? C.accent : C.bgElevated, color: newComp.name && newComp.date ? "#000" : C.textDim, fontSize: "15px", fontWeight: 600, cursor: "pointer", fontFamily: font }}>Lägg till</button>
               </div>
             )}
             {sortedComps.map(function(comp, i) {
               var d = daysUntil(comp.date), isPast = d < 0, isNext = comp === nextComp;
-              var compMatches = Object.values(mLogs).filter(function(m) { return m.compName === comp.name && m.compDate === comp.date; });
+              var compM = Object.values(mLogs).filter(function(m) { return m.compName === comp.name && m.compDate === comp.date; });
               return (
-                <div key={i} style={{ marginBottom: "8px" }}>
-                  <div onClick={function() { setShowMatch(comp); setMatchForm({ matchType: "Singel", won: null, sets: [{ my: "", opp: "" }, { my: "", opp: "" }, { my: "", opp: "" }], opponent: "" }); }} style={{
-                    display: "flex", alignItems: "center", gap: "12px", padding: "14px", borderRadius: compMatches.length > 0 ? "10px 10px 0 0" : "10px",
-                    background: isNext ? "rgba(244,166,35,0.08)" : "rgba(255,255,255,0.02)",
-                    border: isNext ? "1px solid rgba(244,166,35,0.25)" : "1px solid transparent", opacity: isPast && compMatches.length === 0 ? 0.4 : 1, cursor: "pointer",
-                  }}>
-                    <div style={{ width: "44px", height: "44px", borderRadius: "10px", background: comp.type === "tournament" ? "rgba(231,76,60,0.15)" : "rgba(52,152,219,0.15)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "18px", flexShrink: 0 }}>{comp.type === "tournament" ? "🏆" : "🏸"}</div>
+                <div key={i} style={{ marginBottom: "10px" }}>
+                  <div onClick={function() { setShowMatch(comp); setMatchForm({ matchType: "Singel", won: null, sets: [{ my: "", opp: "" }, { my: "", opp: "" }, { my: "", opp: "" }], opponent: "" }); }} style={Object.assign({}, cardStyle, {
+                    display: "flex", alignItems: "center", gap: "14px", cursor: "pointer", borderRadius: compM.length > 0 ? R.lg + " " + R.lg + " 0 0" : R.lg,
+                    background: isNext ? C.accentDim : C.bgCard, border: isNext ? "1px solid rgba(245,183,49,0.25)" : "1px solid " + C.borderLight, opacity: isPast && compM.length === 0 ? 0.4 : 1, marginBottom: 0,
+                  })}>
+                    <div style={{ width: "48px", height: "48px", borderRadius: R.md, background: comp.type === "tournament" ? C.redDim : C.blueDim, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", flexShrink: 0 }}>{comp.type === "tournament" ? "🏆" : "🏸"}</div>
                     <div style={{ flex: 1 }}>
-                      <div style={{ fontSize: "14px", fontWeight: 600, color: "#e0e0e0" }}>{comp.name}</div>
-                      <div style={{ fontSize: "11px", color: "#666", marginTop: "2px" }}>{new Date(comp.date).toLocaleDateString("sv-SE", { weekday: "short", day: "numeric", month: "short" })}</div>
+                      <div style={{ fontSize: "15px", fontWeight: 600, color: C.text }}>{comp.name}</div>
+                      <div style={{ fontSize: "12px", color: C.textMuted, marginTop: "3px" }}>{new Date(comp.date).toLocaleDateString("sv-SE", { weekday: "short", day: "numeric", month: "short" })}</div>
                     </div>
-                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                      {compMatches.length > 0 && <span style={{ fontSize: "11px", color: "#3498db" }}>{compMatches.length} matcher</span>}
-                      <div style={{ fontSize: "12px", fontWeight: 600, color: isPast ? "#555" : d <= 7 ? "#f4a623" : "#666" }}>{isPast ? "Klar" : d + "d"}</div>
-                      <button onClick={function(e) { e.stopPropagation(); setCompetitions(competitions.filter(function(c) { return c !== comp; })); }} style={{ width: "24px", height: "24px", borderRadius: "6px", border: "none", background: "rgba(231,76,60,0.1)", color: "#e74c3c", fontSize: "14px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+                    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                      {compM.length > 0 && <span style={{ fontSize: "12px", color: C.blue, fontWeight: 500 }}>{compM.length} matcher</span>}
+                      <div style={{ fontSize: "13px", fontWeight: 600, color: isPast ? C.textDim : d <= 7 ? C.accent : C.textMuted }}>{isPast ? "Klar" : d + "d"}</div>
+                      <button onClick={function(e) { e.stopPropagation(); setCompetitions(competitions.filter(function(c) { return c !== comp; })); }} style={{ width: "28px", height: "28px", borderRadius: R.sm, border: "none", background: C.redDim, color: C.red, fontSize: "16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
                     </div>
                   </div>
-                  {compMatches.length > 0 && (
-                    <div style={{ background: "rgba(255,255,255,0.02)", borderRadius: "0 0 10px 10px", padding: "8px 14px", borderTop: "1px solid rgba(255,255,255,0.04)" }}>
-                      {compMatches.map(function(m, j) {
-                        var setStr = m.sets.filter(function(s) { return s.my || s.opp; }).map(function(s) { return s.my + "-" + s.opp; }).join(", ");
-                        return (<div key={j} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 0", fontSize: "11px" }}>
-                          <span style={{ color: "#999" }}>{m.matchType}{m.opponent ? " vs " + m.opponent : ""}</span>
-                          <span><span style={{ color: "#888" }}>{setStr}</span> <span style={{ fontWeight: 700, color: m.won ? "#2ecc71" : "#e74c3c", marginLeft: "6px" }}>{m.won ? "V" : "F"}</span></span>
+                  {compM.length > 0 && (
+                    <div style={{ background: C.bgElevated, borderRadius: "0 0 " + R.lg + " " + R.lg, padding: "10px 16px", borderTop: "1px solid " + C.borderLight }}>
+                      {compM.map(function(m, j) { var setStr = m.sets.filter(function(s){return s.my||s.opp;}).map(function(s){return s.my+"-"+s.opp;}).join(", ");
+                        return (<div key={j} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 0", fontSize: "13px" }}>
+                          <span style={{ color: C.textSecondary }}>{m.matchType}{m.opponent ? " vs " + m.opponent : ""}</span>
+                          <span><span style={{ color: C.textMuted }}>{setStr}</span> <span style={{ fontWeight: 700, color: m.won ? C.green : C.red, marginLeft: "8px" }}>{m.won ? "V" : "F"}</span></span>
                         </div>);
                       })}
                     </div>
@@ -891,35 +629,34 @@ export default function BadmintonTrainingApp() {
                 </div>
               );
             })}
-
             {showMatch && (
-              <div style={{ position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.7)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "20px" }} onClick={function() { setShowMatch(null); }}>
-                <div onClick={function(e) { e.stopPropagation(); }} style={{ background: "#1a1a24", borderRadius: "16px", padding: "20px", width: "100%", maxWidth: "360px", maxHeight: "80vh", overflowY: "auto" }}>
-                  <div style={{ fontSize: "15px", fontWeight: 700, color: "#fff", marginBottom: "4px" }}>Logga match</div>
-                  <div style={{ fontSize: "11px", color: "#666", marginBottom: "14px" }}>{showMatch.name} — {new Date(showMatch.date).toLocaleDateString("sv-SE")}</div>
-                  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px" }}>Typ av match</div>
-                  <div style={{ display: "flex", gap: "6px", marginBottom: "14px" }}>
-                    {MATCH_TYPES.map(function(t) { return <button key={t} onClick={function() { setMatchForm(Object.assign({}, matchForm, { matchType: t })); }} style={pill(matchForm.matchType === t, "#3498db")}>{t}</button>; })}
+              <div style={modalOverlay} onClick={function() { setShowMatch(null); }}>
+                <div onClick={function(e) { e.stopPropagation(); }} style={modalBox}>
+                  <div style={sectionTitle}>Logga match</div>
+                  <div style={Object.assign({}, sectionSub, { marginBottom: "18px" })}>{showMatch.name} — {new Date(showMatch.date).toLocaleDateString("sv-SE")}</div>
+                  <div style={labelStyle}>Typ av match</div>
+                  <div style={{ display: "flex", gap: "8px", marginBottom: "18px" }}>
+                    {MATCH_TYPES.map(function(t) { return <button key={t} onClick={function() { setMatchForm(Object.assign({}, matchForm, { matchType: t })); }} style={chipStyle(matchForm.matchType === t, C.blue)}>{t}</button>; })}
                   </div>
-                  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px" }}>Motståndare</div>
-                  <input type="text" placeholder="Namn (valfritt)" value={matchForm.opponent} onChange={function(e) { setMatchForm(Object.assign({}, matchForm, { opponent: e.target.value })); }} style={Object.assign({}, inp, { marginBottom: "14px" })} />
-                  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px" }}>Set (bäst av 3)</div>
+                  <div style={labelStyle}>Motståndare</div>
+                  <input type="text" placeholder="Namn (valfritt)" value={matchForm.opponent} onChange={function(e) { setMatchForm(Object.assign({}, matchForm, { opponent: e.target.value })); }} style={Object.assign({}, inputStyle, { marginBottom: "18px" })} />
+                  <div style={labelStyle}>Set (bäst av 3)</div>
                   {[0, 1, 2].map(function(si) {
-                    return (<div key={si} style={{ display: "flex", gap: "8px", alignItems: "center", marginBottom: "6px" }}>
-                      <span style={{ fontSize: "11px", color: "#666", width: "40px" }}>Set {si + 1}</span>
+                    return (<div key={si} style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "8px" }}>
+                      <span style={{ fontSize: "13px", color: C.textMuted, width: "42px" }}>Set {si + 1}</span>
                       <input type="number" placeholder="Du" value={matchForm.sets[si].my} onChange={function(e) { var s = matchForm.sets.slice(); s[si] = Object.assign({}, s[si], { my: e.target.value }); setMatchForm(Object.assign({}, matchForm, { sets: s })); }}
-                        style={{ width: "60px", padding: "6px", borderRadius: "6px", border: "1px solid #333", background: "rgba(255,255,255,0.05)", color: "#ccc", fontSize: "13px", textAlign: "center" }} />
-                      <span style={{ color: "#555" }}>—</span>
+                        style={{ width: "65px", padding: "8px", borderRadius: R.sm, border: "1px solid " + C.border, background: C.bgInput, color: C.text, fontSize: "15px", textAlign: "center", fontFamily: font, outline: "none" }} />
+                      <span style={{ color: C.textDim, fontSize: "16px" }}>—</span>
                       <input type="number" placeholder="Motst." value={matchForm.sets[si].opp} onChange={function(e) { var s = matchForm.sets.slice(); s[si] = Object.assign({}, s[si], { opp: e.target.value }); setMatchForm(Object.assign({}, matchForm, { sets: s })); }}
-                        style={{ width: "60px", padding: "6px", borderRadius: "6px", border: "1px solid #333", background: "rgba(255,255,255,0.05)", color: "#ccc", fontSize: "13px", textAlign: "center" }} />
+                        style={{ width: "65px", padding: "8px", borderRadius: R.sm, border: "1px solid " + C.border, background: C.bgInput, color: C.text, fontSize: "15px", textAlign: "center", fontFamily: font, outline: "none" }} />
                     </div>);
                   })}
-                  <div style={{ fontSize: "11px", textTransform: "uppercase", letterSpacing: "1.5px", color: "#8a8a9a", marginBottom: "6px", marginTop: "10px" }}>Resultat</div>
-                  <div style={{ display: "flex", gap: "6px", marginBottom: "14px" }}>
-                    <button onClick={function() { setMatchForm(Object.assign({}, matchForm, { won: true })); }} style={pill(matchForm.won === true, "#2ecc71")}>Vinst ✓</button>
-                    <button onClick={function() { setMatchForm(Object.assign({}, matchForm, { won: false })); }} style={pill(matchForm.won === false, "#e74c3c")}>Förlust ✗</button>
+                  <div style={Object.assign({}, labelStyle, { marginTop: "14px" })}>Resultat</div>
+                  <div style={{ display: "flex", gap: "8px", marginBottom: "18px" }}>
+                    <button onClick={function() { setMatchForm(Object.assign({}, matchForm, { won: true })); }} style={chipStyle(matchForm.won === true, C.green)}>Vinst ✓</button>
+                    <button onClick={function() { setMatchForm(Object.assign({}, matchForm, { won: false })); }} style={chipStyle(matchForm.won === false, C.red)}>Förlust ✗</button>
                   </div>
-                  <button onClick={saveMatch} style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "none", background: matchForm.won !== null ? "#2ecc71" : "rgba(255,255,255,0.05)", color: matchForm.won !== null ? "#000" : "#555", fontSize: "14px", fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>Spara match</button>
+                  <button onClick={saveMatch} style={{ width: "100%", padding: "14px", borderRadius: R.md, border: "none", background: matchForm.won !== null ? C.green : C.bgElevated, color: matchForm.won !== null ? "#000" : C.textDim, fontSize: "16px", fontWeight: 700, cursor: "pointer", fontFamily: font }}>Spara match</button>
                 </div>
               </div>
             )}
@@ -927,11 +664,46 @@ export default function BadmintonTrainingApp() {
         )}
       </div>
 
-      <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: "600px", background: "rgba(13,13,18,0.95)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.06)", display: "flex", padding: "8px 16px", paddingBottom: "max(8px, env(safe-area-inset-bottom))" }}>
+      {/* VIEW LOG MODAL */}
+      {viewLog && (
+        <div style={modalOverlay} onClick={function() { setViewLog(null); }}>
+          <div onClick={function(e) { e.stopPropagation(); }} style={modalBox}>
+            <div style={sectionTitle}>{viewLog.sessionLabel}</div>
+            <div style={Object.assign({}, sectionSub, { marginBottom: "18px" })}>{new Date(viewLog.displayDate || viewLog.date).toLocaleDateString("sv-SE", { weekday: "long", day: "numeric", month: "long" })}</div>
+            <div style={labelStyle}>Status</div>
+            <div style={{ fontSize: "15px", color: viewLog.completed === "yes" ? C.green : viewLog.completed === "partial" ? C.yellow : C.red, marginBottom: "16px", fontWeight: 600 }}>
+              {viewLog.completed === "yes" ? "✓ Genomfört" : viewLog.completed === "partial" ? "~ Delvis" : "✗ Inte genomfört"}
+            </div>
+            {(function() {
+              var tt = Array.isArray(viewLog.trainingType) ? viewLog.trainingType : (viewLog.trainingType ? [viewLog.trainingType] : []);
+              if (tt.length === 0) return null;
+              return (<div><div style={labelStyle}>Typ av träning</div><div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "16px" }}>
+                {tt.map(function(t) { return <span key={t} style={{ fontSize: "13px", color: C.blue, background: C.blueDim, padding: "4px 10px", borderRadius: "12px", fontWeight: 500 }}>{t}</span>; })}
+              </div></div>);
+            })()}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
+              <div><div style={labelStyle}>Egen insats</div><div style={{ fontSize: "26px", fontWeight: 700, color: (viewLog.rating||0) >= 4 ? C.green : (viewLog.rating||0) >= 3 ? C.yellow : C.red }}>{viewLog.rating || "—"}<span style={{ fontSize: "14px", color: C.textDim }}>/5</span></div></div>
+              <div><div style={labelStyle}>Energinivå</div><div style={{ fontSize: "26px", fontWeight: 700, color: (viewLog.energy||0) >= 4 ? C.green : (viewLog.energy||0) >= 3 ? C.yellow : C.red }}>{viewLog.energy || "—"}<span style={{ fontSize: "14px", color: C.textDim }}>/5</span></div></div>
+            </div>
+            {viewLog.note && (<div><div style={labelStyle}>Anteckning</div><div style={{ fontSize: "14px", color: C.textSecondary, background: C.bgElevated, padding: "12px 14px", borderRadius: R.md, marginBottom: "16px", fontStyle: "italic", lineHeight: 1.5 }}>{viewLog.note}</div></div>)}
+            <button onClick={function() {
+              if (window.confirm("Vill du ta bort denna logg?")) {
+                var keyToRemove = (viewLog.displayDate || viewLog.date) + "-" + viewLog.sessionId;
+                var newLogs = Object.assign({}, tLogs); delete newLogs[keyToRemove]; setTLogs(newLogs); setViewLog(null);
+              }
+            }} style={{ width: "100%", padding: "14px", borderRadius: R.md, border: "1px solid " + C.redBorder, background: C.redDim, color: C.red, fontSize: "14px", cursor: "pointer", fontFamily: font, fontWeight: 600, marginBottom: "8px" }}>Ta bort logg</button>
+            <button onClick={function() { setViewLog(null); }} style={{ width: "100%", padding: "14px", borderRadius: R.md, border: "1px solid " + C.border, background: "transparent", color: C.textMuted, fontSize: "14px", cursor: "pointer", fontFamily: font }}>Stäng</button>
+          </div>
+        </div>
+      )}
+
+      {/* NAV */}
+      <div style={{ position: "fixed", bottom: 0, left: "50%", transform: "translateX(-50%)", width: "100%", maxWidth: "600px", background: "rgba(18,18,24,0.95)", backdropFilter: "blur(20px)", borderTop: "1px solid " + C.border, display: "flex", padding: "10px 20px", paddingBottom: "max(10px, env(safe-area-inset-bottom))" }}>
         {tabs.map(function(t) {
-          return (<button key={t.id} onClick={function() { setActiveTab(t.id); }} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "2px", padding: "8px 0", background: "transparent", border: "none", cursor: "pointer" }}>
-            <span style={{ fontSize: "20px", filter: activeTab === t.id ? "none" : "grayscale(1) opacity(0.4)" }}>{t.icon}</span>
-            <span style={{ fontSize: "9px", textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600, color: activeTab === t.id ? "#f4a623" : "#444", fontFamily: "'JetBrains Mono',monospace" }}>{t.label}</span>
+          var active = activeTab === t.id;
+          return (<button key={t.id} onClick={function() { setActiveTab(t.id); }} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "4px", padding: "8px 0", background: "transparent", border: "none", cursor: "pointer" }}>
+            <span style={{ fontSize: "22px", filter: active ? "none" : "grayscale(1) opacity(0.35)" }}>{t.icon}</span>
+            <span style={{ fontSize: "10px", fontWeight: 600, color: active ? C.accent : C.textDim, fontFamily: font, letterSpacing: "0.5px", textTransform: "uppercase" }}>{t.label}</span>
           </button>);
         })}
       </div>
