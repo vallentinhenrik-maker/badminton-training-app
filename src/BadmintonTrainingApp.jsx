@@ -32,42 +32,42 @@ async function dbSave(userId, fields) {
 }
 
 // === CONSTANTS ===
-var DAYS = ["M\u00e5n", "Tis", "Ons", "Tor", "Fre", "L\u00f6r", "S\u00f6n"];
-var TRAINING_TYPES = ["Teknik", "Fys", "Enbolls\u00f6vningar", "Matchspel", "Multi", "Flackt spel", "Teori", "Blandat"];
-var WELLNESS_LABELS = ["S\u00f6mn", "Muskeltr\u00f6tthet", "Motivation", "Energi"];
+var DAYS = ["Mån", "Tis", "Ons", "Tor", "Fre", "Lör", "Sön"];
+var TRAINING_TYPES = ["Teknik", "Fys", "Enbollsövningar", "Matchspel", "Multi", "Flackt spel", "Teori", "Blandat"];
+var WELLNESS_LABELS = ["Sömn", "Muskeltrötthet", "Motivation", "Energi"];
 var MATCH_TYPES = ["Singel", "Dubbel", "Mixed"];
 
 var DEFAULT_WEEK = [
-  { day: "M\u00e5n", sessions: [{ id: "mon1", type: "gym", label: "Gym (skola)", time: "16:40-17:00" }, { id: "mon2", type: "badminton", label: "Klubb", time: "18:30-20:00" }] },
+  { day: "Mån", sessions: [{ id: "mon1", type: "gym", label: "Gym (skola)", time: "16:40-17:00" }, { id: "mon2", type: "badminton", label: "Klubb", time: "18:30-20:00" }] },
   { day: "Tis", sessions: [{ id: "tue1", type: "badminton", label: "Klubb", time: "18:30-20:00" }] },
   { day: "Ons", sessions: [{ id: "wed1", type: "badminton", label: "Skola", time: "07:15-09:00" }, { id: "wed2", type: "badminton", label: "Klubb", time: "18:30-20:00" }] },
   { day: "Tor", sessions: [{ id: "thu1", type: "gym", label: "Extra gym", time: "14:20" }, { id: "thu2", type: "badminton", label: "Klubb", time: "19:30-21:00" }] },
   { day: "Fre", sessions: [{ id: "fri1", type: "badminton", label: "Skola", time: "07:15-09:00" }] },
-  { day: "L\u00f6r", sessions: [{ id: "sat1", type: "rest", label: "Vila / T\u00e4vling", time: "" }] },
-  { day: "S\u00f6n", sessions: [{ id: "sun1", type: "rest", label: "Vila / T\u00e4vling", time: "" }] },
+  { day: "Lör", sessions: [{ id: "sat1", type: "rest", label: "Vila / Tävling", time: "" }] },
+  { day: "Sön", sessions: [{ id: "sun1", type: "rest", label: "Vila / Tävling", time: "" }] },
 ];
 
 var GYM_EXERCISES = [
-  { id: 1, name: "Kn\u00e4b\u00f6j", category: "Ben", sets: 4, reps: "6-8", targetMuscle: "Explosivitet" },
+  { id: 1, name: "Knäböj", category: "Ben", sets: 4, reps: "6-8", targetMuscle: "Explosivitet" },
   { id: 2, name: "Utfall med hopp", category: "Ben", sets: 3, reps: "8/ben", targetMuscle: "Explosivitet" },
-  { id: 3, name: "B\u00e4nkpress", category: "\u00d6verkropp", sets: 4, reps: "8-10", targetMuscle: "Br\u00f6st/axlar" },
+  { id: 3, name: "Bänkpress", category: "Överkropp", sets: 4, reps: "8-10", targetMuscle: "Bröst/axlar" },
   { id: 4, name: "Axelrotation (extern)", category: "Axelstabilitet", sets: 3, reps: "12-15", targetMuscle: "Rotatorkuff" },
   { id: 5, name: "Face pulls", category: "Axelstabilitet", sets: 3, reps: "15", targetMuscle: "Bakre axel" },
   { id: 6, name: "Pallof press", category: "Core", sets: 3, reps: "10/sida", targetMuscle: "Anti-rotation" },
-  { id: 7, name: "Marklyft (rum\u00e4nsk)", category: "Ben", sets: 4, reps: "8-10", targetMuscle: "Posterior kedja" },
+  { id: 7, name: "Marklyft (rumänsk)", category: "Ben", sets: 4, reps: "8-10", targetMuscle: "Posterior kedja" },
   { id: 8, name: "Planka variationer", category: "Core", sets: 3, reps: "30-45s", targetMuscle: "Stabilitet" },
-  { id: 9, name: "Enbensst\u00e5ende rodd", category: "Rygg", sets: 3, reps: "10/sida", targetMuscle: "Balans + rygg" },
+  { id: 9, name: "Enbensstående rodd", category: "Rygg", sets: 3, reps: "10/sida", targetMuscle: "Balans + rygg" },
   { id: 10, name: "Box jumps", category: "Plyometri", sets: 4, reps: "5", targetMuscle: "Explosivitet" },
-  { id: 11, name: "Pullups", category: "\u00d6verkropp", sets: 4, reps: "Max", targetMuscle: "Rygg/biceps" },
-  { id: 12, name: "Armh\u00e4vningar", category: "\u00d6verkropp", sets: 3, reps: "Max", targetMuscle: "Br\u00f6st/triceps" },
+  { id: 11, name: "Pullups", category: "Överkropp", sets: 4, reps: "Max", targetMuscle: "Rygg/biceps" },
+  { id: 12, name: "Armhävningar", category: "Överkropp", sets: 3, reps: "Max", targetMuscle: "Bröst/triceps" },
   { id: 13, name: "Nordic hamstrings", category: "Ben", sets: 3, reps: "5-8", targetMuscle: "Hamstrings (excentriskt)" },
 ];
 
 var DEFAULT_COMPETITIONS = [
   { date: "2026-04-11", name: "Seriespel (hemma)", type: "series" },
-  { date: "2026-04-25", name: "RSL T\u00e4vling", type: "tournament" },
+  { date: "2026-04-25", name: "RSL Tävling", type: "tournament" },
   { date: "2026-05-09", name: "Seriespel (borta)", type: "series" },
-  { date: "2026-05-23", name: "Distriktsm\u00e4sterskap", type: "tournament" },
+  { date: "2026-05-23", name: "Distriktsmästerskap", type: "tournament" },
   { date: "2026-06-06", name: "USM", type: "tournament" },
 ];
 
@@ -112,7 +112,7 @@ function LoadBar(p) {
   return (<div style={{ marginBottom: "12px" }}>
     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
       <span style={{ fontSize: "13px", color: C.textSecondary, fontWeight: 500 }}>{p.label}</span>
-      <span style={{ fontSize: "13px", color: hi ? C.red : C.textSecondary, fontWeight: hi ? 600 : 400 }}>{hi ? "\u26a0 H\u00f6g" : Math.round(pct) + "%"}</span>
+      <span style={{ fontSize: "13px", color: hi ? C.red : C.textSecondary, fontWeight: hi ? 600 : 400 }}>{hi ? "⚠ Hög" : Math.round(pct) + "%"}</span>
     </div>
     <div style={{ height: "8px", background: C.bgElevated, borderRadius: "4px", overflow: "hidden" }}>
       <div style={{ width: pct + "%", height: "100%", background: hi ? C.red : p.color, borderRadius: "4px", transition: "width 0.5s ease" }} />
@@ -131,8 +131,8 @@ function GymLog(p) {
           background: p.log[ex.id] ? C.greenDim : C.bgElevated, border: p.log[ex.id] ? "1px solid " + C.greenBorder : "1px solid " + C.borderLight, cursor: "pointer",
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            <div style={{ width: "22px", height: "22px", borderRadius: "6px", border: p.log[ex.id] ? "none" : "2px solid " + C.textDim, background: p.log[ex.id] ? C.green : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", color: "#fff", flexShrink: 0 }}>{p.log[ex.id] ? "\u2713" : ""}</div>
-            <div><div style={{ fontSize: "14px", color: C.text, fontWeight: 500 }}>{ex.name}</div><div style={{ fontSize: "12px", color: C.textMuted, marginTop: "2px" }}>{ex.sets}\u00d7{ex.reps} \u2014 {ex.targetMuscle}</div></div>
+            <div style={{ width: "22px", height: "22px", borderRadius: "6px", border: p.log[ex.id] ? "none" : "2px solid " + C.textDim, background: p.log[ex.id] ? C.green : "transparent", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "13px", color: "#fff", flexShrink: 0 }}>{p.log[ex.id] ? "✓" : ""}</div>
+            <div><div style={{ fontSize: "14px", color: C.text, fontWeight: 500 }}>{ex.name}</div><div style={{ fontSize: "12px", color: C.textMuted, marginTop: "2px" }}>{ex.sets}×{ex.reps} — {ex.targetMuscle}</div></div>
           </div>
           <div onClick={function(e) { e.stopPropagation(); }}>
             <input type="number" placeholder="kg" value={p.log["w_" + ex.id] || ""} onChange={function(e) { p.setLog(function(prev) { var n = Object.assign({}, prev); n["w_" + ex.id] = e.target.value; return n; }); }}
@@ -220,13 +220,13 @@ export default function BadmintonTrainingApp() {
   function getMilestone(n) { var ms = [10,25,50,75,100,150,200,300,500]; for (var i = ms.length-1; i >= 0; i--) { if (n === ms[i]) return ms[i]; } return null; }
   function getMotivMsg(f) {
     var ms;
-    if (f.rating >= 4 && f.energy >= 4) ms = ["Otroligt pass! Du var helt on fire \ud83d\udd25", "Topp-prestanda! Kroppen och viljan levererade \ud83d\udcaa", "Starkt jobbat! B\u00e5de energi och insats p\u00e5 topp \u2b50"];
-    else if (f.rating >= 4) ms = ["Riktigt bra insats! Du gav allt idag \ud83d\udcaa", "Stark mental insats \u2014 det bygger m\u00e4stare \ud83c\udfc6"];
-    else if (f.energy >= 4) ms = ["Bra energi idag! Kroppen var redo \ud83d\udcaa", "Fint att kroppen m\u00e5r bra \u2014 utnyttja det! \u26a1"];
-    else if (f.rating >= 3 || f.energy >= 3) ms = ["Bra jobbat! Varje pass r\u00e4knas \ud83d\udc4a", "Solid tr\u00e4ning \u2014 konsistens sl\u00e5r allt \ud83d\udcc8"];
-    else if (f.completed === "yes") ms = ["Bra att du genomf\u00f6rde trots att det var tungt \ud83d\udc99", "De tyngsta passen bygger mest mental styrka \ud83e\udde0"];
-    else if (f.completed === "partial") ms = ["Bra att du loggade \u2014 att lyssna p\u00e5 kroppen \u00e4r smart \ud83e\uddd8"];
-    else ms = ["Tack f\u00f6r att du loggade. Vila \u00e4r ocks\u00e5 tr\u00e4ning \ud83d\udca4"];
+    if (f.rating >= 4 && f.energy >= 4) ms = ["Otroligt pass! Du var helt on fire 🔥", "Topp-prestanda! Kroppen och viljan levererade 💪", "Starkt jobbat! Både energi och insats på topp ⭐"];
+    else if (f.rating >= 4) ms = ["Riktigt bra insats! Du gav allt idag 💪", "Stark mental insats — det bygger mästare 🏆"];
+    else if (f.energy >= 4) ms = ["Bra energi idag! Kroppen var redo 💪", "Fint att kroppen mår bra — utnyttja det! ⚡"];
+    else if (f.rating >= 3 || f.energy >= 3) ms = ["Bra jobbat! Varje pass räknas 👊", "Solid träning — konsistens slår allt 📈"];
+    else if (f.completed === "yes") ms = ["Bra att du genomförde trots att det var tungt 💙", "De tyngsta passen bygger mest mental styrka 🧠"];
+    else if (f.completed === "partial") ms = ["Bra att du loggade — att lyssna på kroppen är smart 🧘"];
+    else ms = ["Tack för att du loggade. Vila är också träning 💤"];
     return ms[Math.floor(Math.random() * ms.length)];
   }
   function getWeeklySummary() {
@@ -278,12 +278,12 @@ export default function BadmintonTrainingApp() {
     return (<div style={{ fontFamily: font, background: C.bg, color: C.text, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: "24px" }}>
       <div style={{ maxWidth: "340px", width: "100%" }}>
         <div style={{ textAlign: "center", marginBottom: "40px" }}>
-          <div style={{ fontSize: "48px", marginBottom: "12px" }}>{"\ud83c\udff8"}</div>
+          <div style={{ fontSize: "48px", marginBottom: "12px" }}>{"🏸"}</div>
           <div style={{ fontSize: "28px", fontWeight: 700, marginBottom: "8px" }}>Badminton Tracker</div>
-          <div style={{ fontSize: "15px", color: C.textMuted }}>Logga tr\u00e4ning, matcher & utveckling</div>
+          <div style={{ fontSize: "15px", color: C.textMuted }}>Logga träning, matcher & utveckling</div>
         </div>
-        <div style={{ fontSize: "13px", color: C.textMuted, marginBottom: "12px", textAlign: "center" }}>Skriv samma namn p\u00e5 alla enheter</div>
-        <input type="text" placeholder="Ditt anv\u00e4ndarnamn" value={loginName} onChange={function(e) { setLoginName(e.target.value); }} onKeyDown={function(e) { if (e.key === "Enter") handleLogin(); }} style={Object.assign({}, inputStyle, { marginBottom: "14px", textAlign: "center", fontSize: "18px", padding: "16px" })} />
+        <div style={{ fontSize: "13px", color: C.textMuted, marginBottom: "12px", textAlign: "center" }}>Skriv samma namn på alla enheter</div>
+        <input type="text" placeholder="Ditt användarnamn" value={loginName} onChange={function(e) { setLoginName(e.target.value); }} onKeyDown={function(e) { if (e.key === "Enter") handleLogin(); }} style={Object.assign({}, inputStyle, { marginBottom: "14px", textAlign: "center", fontSize: "18px", padding: "16px" })} />
         <button onClick={handleLogin} style={{ width: "100%", padding: "16px", borderRadius: R.lg, border: "none", background: loginName.trim() ? C.accent : C.bgElevated, color: loginName.trim() ? "#000" : C.textDim, fontSize: "16px", fontWeight: 700, cursor: "pointer", fontFamily: font }}>Logga in</button>
       </div>
     </div>);
@@ -319,7 +319,7 @@ export default function BadmintonTrainingApp() {
     var msg = getMotivMsg(logForm);
     var newTotal = Object.values(newTLogs).filter(function(l) { return l.completed === "yes" || l.completed === "partial"; }).length;
     var ms = getMilestone(newTotal);
-    if (ms) msg = "\ud83c\udf89 " + ms + " loggade pass! " + msg;
+    if (ms) msg = "🎉 " + ms + " loggade pass! " + msg;
     setMotivMsg(msg); setTimeout(function() { setMotivMsg(null); }, 4000);
     setLogSess(null); setLogForm({ completed: "yes", trainingType: [], rating: 0, energy: 0, note: "" });
   }
@@ -349,7 +349,7 @@ export default function BadmintonTrainingApp() {
   function PeriodFilter() {
     return (<div>
       <div style={{ display: "flex", gap: "6px", marginBottom: "14px", flexWrap: "wrap" }}>
-        {[{ v: "week", l: "Vecka" }, { v: "month", l: "M\u00e5nad" }, { v: "year", l: "\u00c5r" }, { v: "custom", l: "Anpassad" }].map(function(f) { return <button key={f.v} onClick={function() { setStatsFilter(f.v); }} style={chipStyle(statsFilter === f.v)}>{f.l}</button>; })}
+        {[{ v: "week", l: "Vecka" }, { v: "month", l: "Månad" }, { v: "year", l: "År" }, { v: "custom", l: "Anpassad" }].map(function(f) { return <button key={f.v} onClick={function() { setStatsFilter(f.v); }} style={chipStyle(statsFilter === f.v)}>{f.l}</button>; })}
       </div>
       {statsFilter === "custom" && (<div style={{ display: "flex", gap: "8px", marginBottom: "14px" }}>
         <input type="date" value={customDates.from} onChange={function(e) { setCustomDates(Object.assign({}, customDates, { from: e.target.value })); }} style={Object.assign({}, inputStyle, { fontSize: "13px" })} />
@@ -358,7 +358,7 @@ export default function BadmintonTrainingApp() {
     </div>);
   }
 
-  var tabs = [{ id: "week", label: "Vecka", icon: "\ud83d\udcc5" }, { id: "log", label: "Logg", icon: "\u270f\ufe0f" }, { id: "stats", label: "Statistik", icon: "\ud83d\udcca" }, { id: "insights", label: "Insikter", icon: "\ud83e\udde0" }, { id: "calendar", label: "T\u00e4vling", icon: "\ud83c\udff8" }];
+  var tabs = [{ id: "week", label: "Vecka", icon: "📅" }, { id: "log", label: "Logg", icon: "✏️" }, { id: "stats", label: "Statistik", icon: "📊" }, { id: "insights", label: "Insikter", icon: "🧠" }, { id: "calendar", label: "Tävling", icon: "🏸" }];
 
   return (
     <div style={{ fontFamily: font, background: C.bg, color: C.text, minHeight: "100vh", maxWidth: "600px", width: "100%", margin: "0 auto", position: "relative", paddingBottom: "90px" }}>
@@ -369,18 +369,18 @@ export default function BadmintonTrainingApp() {
           <div>
             <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "6px" }}>
               <span style={{ fontSize: "12px", color: C.textMuted, fontWeight: 500 }}>{userId}</span>
-              {syncing && <span style={{ fontSize: "11px", color: C.blue }}>{"\u25cf"} synkar</span>}
+              {syncing && <span style={{ fontSize: "11px", color: C.blue }}>{"●"} synkar</span>}
               <button onClick={handleLogout} style={{ padding: "3px 8px", borderRadius: "4px", border: "1px solid " + C.border, background: "transparent", color: C.textMuted, fontSize: "11px", cursor: "pointer", fontFamily: font }}>Logga ut</button>
             </div>
             <div style={{ fontSize: "30px", fontWeight: 700, letterSpacing: "-0.5px" }}>Vecka {weekNum}</div>
           </div>
           {nextComp && (<div style={{ background: daysToComp <= 3 ? C.redDim : C.accentDim, border: "1px solid " + (daysToComp <= 3 ? C.redBorder : "rgba(245,183,49,0.25)"), borderRadius: R.md, padding: "8px 12px", maxWidth: "180px" }}>
-            <div style={{ fontSize: "10px", color: daysToComp <= 3 ? C.red : C.accent, textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600 }}>{daysToComp <= 3 ? "T\u00e4vling snart!" : "N\u00e4sta t\u00e4vling"}</div>
-            <div style={{ fontSize: "13px", color: C.textSecondary, marginTop: "3px" }}>{nextComp.name} \u2014 {daysToComp}d</div>
+            <div style={{ fontSize: "10px", color: daysToComp <= 3 ? C.red : C.accent, textTransform: "uppercase", letterSpacing: "1px", fontWeight: 600 }}>{daysToComp <= 3 ? "Tävling snart!" : "Nästa tävling"}</div>
+            <div style={{ fontSize: "13px", color: C.textSecondary, marginTop: "3px" }}>{nextComp.name} — {daysToComp}d</div>
           </div>)}
         </div>
         <div style={{ display: "flex", gap: "8px", marginTop: "18px" }}>
-          {[{ l: "Pass", v: actSess, c: C.blue }, { l: "Badminton", v: badCnt, c: C.green }, { l: "Gym", v: gymCnt, c: C.accent }, { l: "Streak", v: streak > 0 ? streak + "\ud83d\udd25" : "0", c: streak >= 5 ? C.accent : streak > 0 ? C.green : C.textDim }, { l: "Kropp", v: wAvg ? wAvg.toFixed(1) : "\u2014", c: wAvg >= 4 ? C.green : wAvg >= 3 ? C.yellow : C.red }].map(function(s) {
+          {[{ l: "Pass", v: actSess, c: C.blue }, { l: "Badminton", v: badCnt, c: C.green }, { l: "Gym", v: gymCnt, c: C.accent }, { l: "Streak", v: streak > 0 ? streak + "🔥" : "0", c: streak >= 5 ? C.accent : streak > 0 ? C.green : C.textDim }, { l: "Kropp", v: wAvg ? wAvg.toFixed(1) : "—", c: wAvg >= 4 ? C.green : wAvg >= 3 ? C.yellow : C.red }].map(function(s) {
             return (<div key={s.l} style={{ flex: 1, textAlign: "center", padding: "10px 0", background: C.bgCard, borderRadius: R.md, border: "1px solid " + C.borderLight }}>
               <div style={{ fontSize: "20px", fontWeight: 700, color: s.c }}>{s.v}</div>
               <div style={{ fontSize: "9px", textTransform: "uppercase", letterSpacing: "1px", color: C.textMuted, marginTop: "4px", fontWeight: 500 }}>{s.l}</div>
@@ -397,14 +397,14 @@ export default function BadmintonTrainingApp() {
           {(function() { var ws = getWeeklySummary(); if (ws.twC === 0 && !ws.hasLW) return null;
             return (<div style={Object.assign({}, cardStyle, { marginBottom: "18px", background: C.bgElevated, border: "1px solid " + C.border })}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
-                <div style={{ fontSize: "14px", fontWeight: 600 }}>Vecko\u00f6versikt</div>
+                <div style={{ fontSize: "14px", fontWeight: 600 }}>Veckoöversikt</div>
                 {totalLogCount > 0 && <div style={{ fontSize: "12px", color: C.textMuted }}>{totalLogCount} totalt</div>}
               </div>
               <div style={{ fontSize: "15px", color: C.textSecondary, lineHeight: 1.5 }}>
-                {ws.twC > 0 ? (<span><span style={{ color: C.green, fontWeight: 600 }}>{ws.twC} genomf\u00f6rda pass</span> denna vecka{ws.twR > 0 ? <span> med snittinsats <span style={{ color: C.accent, fontWeight: 600 }}>{ws.twR.toFixed(1)}</span></span> : ""}</span>) : (<span style={{ color: C.textMuted }}>Inga loggade pass \u00e4nnu</span>)}
+                {ws.twC > 0 ? (<span><span style={{ color: C.green, fontWeight: 600 }}>{ws.twC} genomförda pass</span> denna vecka{ws.twR > 0 ? <span> med snittinsats <span style={{ color: C.accent, fontWeight: 600 }}>{ws.twR.toFixed(1)}</span></span> : ""}</span>) : (<span style={{ color: C.textMuted }}>Inga loggade pass ännu</span>)}
               </div>
               {ws.hasLW && (<div style={{ fontSize: "13px", marginTop: "6px", color: ws.diff > 0 ? C.green : ws.diff < 0 ? C.red : C.textMuted }}>
-                {ws.diff > 0 ? "\u2191 " + ws.diff + " fler \u00e4n f\u00f6rra veckan" : ws.diff < 0 ? "\u2193 " + Math.abs(ws.diff) + " f\u00e4rre \u00e4n f\u00f6rra veckan" : "Samma som f\u00f6rra veckan"}
+                {ws.diff > 0 ? "↑ " + ws.diff + " fler än förra veckan" : ws.diff < 0 ? "↓ " + Math.abs(ws.diff) + " färre än förra veckan" : "Samma som förra veckan"}
               </div>)}
             </div>);
           })()}
@@ -412,22 +412,22 @@ export default function BadmintonTrainingApp() {
           <LoadBar value={badCnt} max={7} label="Badminton" color={C.green} />
           <LoadBar value={gymCnt} max={3} label="Gym" color={C.accent} />
           {isTaper && (<div style={{ background: C.redDim, border: "1px solid " + C.redBorder, borderRadius: R.lg, padding: "14px 16px", margin: "16px 0" }}>
-            <div style={{ fontSize: "15px", fontWeight: 600, color: C.red }}>{"\u26a1"} T\u00e4vlingsvecka \u2014 Tapering</div>
-            <div style={{ fontSize: "13px", color: C.textSecondary, marginTop: "4px" }}>K\u00f6r l\u00e4ttare gym. Fokus mobilitet och aktivering.</div>
+            <div style={{ fontSize: "15px", fontWeight: 600, color: C.red }}>{"⚡"} Tävlingsvecka — Tapering</div>
+            <div style={{ fontSize: "13px", color: C.textSecondary, marginTop: "4px" }}>Kör lättare gym. Fokus mobilitet och aktivering.</div>
           </div>)}
           <div style={{ marginTop: "16px" }}>
             {curWeek.map(function(day, i) {
               var isToday = i === todayIdx;
               return (<div key={i} style={{ padding: "14px 0", borderBottom: "1px solid " + C.borderLight }}>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                  <div style={{ fontSize: "14px", fontWeight: 600, color: isToday ? C.blue : C.textSecondary }}>{day.day}{isToday ? " \u2014 idag" : ""}</div>
-                  <button onClick={function() { setAddSessDay(i); setShowAddSess(true); }} style={{ padding: "4px 12px", borderRadius: R.sm, border: "1px solid " + C.border, background: "transparent", color: C.textMuted, fontSize: "12px", cursor: "pointer", fontFamily: font }}>+ L\u00e4gg till</button>
+                  <div style={{ fontSize: "14px", fontWeight: 600, color: isToday ? C.blue : C.textSecondary }}>{day.day}{isToday ? " — idag" : ""}</div>
+                  <button onClick={function() { setAddSessDay(i); setShowAddSess(true); }} style={{ padding: "4px 12px", borderRadius: R.sm, border: "1px solid " + C.border, background: "transparent", color: C.textMuted, fontSize: "12px", cursor: "pointer", fontFamily: font }}>+ Lägg till</button>
                 </div>
                 {day.sessions.map(function(s) {
                   if (s.type === "rest") return (<div key={s.id} style={{ padding: "10px 14px", fontSize: "13px", color: C.textDim, background: C.bgCard, borderRadius: R.md, marginBottom: "6px" }}>{s.label}</div>);
                   var status = getSessionStatus(i, s.id);
                   var stColor = status === "done" ? C.green : status === "cancelled" ? C.red : C.blue;
-                  var stLabel = status === "done" ? "Genomf\u00f6rt" : status === "cancelled" ? "Inst\u00e4llt" : "Planerat";
+                  var stLabel = status === "done" ? "Genomfört" : status === "cancelled" ? "Inställt" : "Planerat";
                   var dayDate = getDateForDayIndex(i); var logEntry = tLogs[dayDate + "-" + s.id];
                   var dotColor = s.type === "badminton" ? C.green : C.accent;
                   return (<div key={s.id} style={Object.assign({}, cardStyle, { display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", marginBottom: "6px" })}>
@@ -441,14 +441,14 @@ export default function BadmintonTrainingApp() {
                       else if (status === "cancelled") setSessStatus(i, s.id, "planned");
                       else if (status === "planned") setSessStatus(i, s.id, "cancelled");
                     }} style={{ padding: "5px 12px", borderRadius: "20px", border: "none", background: stColor + "18", color: stColor, fontSize: "12px", fontWeight: 600, cursor: "pointer", fontFamily: font, minWidth: "80px", textAlign: "center" }}>{stLabel}</button>
-                    <button onClick={function() { if (window.confirm("Ta bort " + s.label + "?")) removeSess(i, s.id); }} style={{ padding: "4px 8px", borderRadius: "6px", border: "none", background: C.redDim, color: C.red, fontSize: "14px", cursor: "pointer", lineHeight: 1 }}>{"\u00d7"}</button>
+                    <button onClick={function() { if (window.confirm("Ta bort " + s.label + "?")) removeSess(i, s.id); }} style={{ padding: "4px 8px", borderRadius: "6px", border: "none", background: C.redDim, color: C.red, fontSize: "14px", cursor: "pointer", lineHeight: 1 }}>{"×"}</button>
                   </div>);
                 })}
               </div>);
             })}
           </div>
           {showAddSess && (<div style={modalOverlay} onClick={function() { setShowAddSess(false); }}><div onClick={function(e) { e.stopPropagation(); }} style={modalBox}>
-            <div style={sectionTitle}>L\u00e4gg till pass \u2014 {DAYS[addSessDay]}</div>
+            <div style={sectionTitle}>Lägg till pass — {DAYS[addSessDay]}</div>
             <div style={{ marginTop: "16px" }}>
               <input type="text" placeholder="Namn" value={newSess.label} onChange={function(e) { setNewSess(Object.assign({}, newSess, { label: e.target.value })); }} style={Object.assign({}, inputStyle, { marginBottom: "10px" })} />
               <input type="text" placeholder="Tid (t.ex. 18:00-19:30)" value={newSess.time} onChange={function(e) { setNewSess(Object.assign({}, newSess, { time: e.target.value })); }} style={Object.assign({}, inputStyle, { marginBottom: "12px" })} />
@@ -456,7 +456,7 @@ export default function BadmintonTrainingApp() {
                 <button onClick={function() { setNewSess(Object.assign({}, newSess, { type: "badminton" })); }} style={chipStyle(newSess.type === "badminton", C.green)}>Badminton</button>
                 <button onClick={function() { setNewSess(Object.assign({}, newSess, { type: "gym" })); }} style={chipStyle(newSess.type === "gym", C.accent)}>Gym</button>
               </div>
-              <button onClick={function() { addSess(addSessDay); }} style={{ width: "100%", padding: "14px", borderRadius: R.md, border: "none", background: newSess.label ? C.accent : C.bgElevated, color: newSess.label ? "#000" : C.textDim, fontSize: "15px", fontWeight: 600, cursor: "pointer", fontFamily: font }}>L\u00e4gg till</button>
+              <button onClick={function() { addSess(addSessDay); }} style={{ width: "100%", padding: "14px", borderRadius: R.md, border: "none", background: newSess.label ? C.accent : C.bgElevated, color: newSess.label ? "#000" : C.textDim, fontSize: "15px", fontWeight: 600, cursor: "pointer", fontFamily: font }}>Lägg till</button>
             </div>
           </div></div>)}
         </div>)}
@@ -475,8 +475,8 @@ export default function BadmintonTrainingApp() {
             var isLogToday = logDate === today;
             return (<div>
               {isLogToday && (<div style={{ marginBottom: "24px" }}>
-                <div style={sectionTitle}>Daglig avst\u00e4mning</div>
-                <div style={sectionSub}>1 = d\u00e5ligt, 5 = topp</div>
+                <div style={sectionTitle}>Daglig avstämning</div>
+                <div style={sectionSub}>1 = dåligt, 5 = topp</div>
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
                   {WELLNESS_LABELS.map(function(label) {
                     return (<div key={label} style={cardStyle}>
@@ -487,10 +487,10 @@ export default function BadmintonTrainingApp() {
                     </div>);
                   })}
                 </div>
-                {wAvg > 0 && wAvg < 3 && (<div style={{ marginTop: "10px", background: C.redDim, border: "1px solid " + C.redBorder, borderRadius: R.md, padding: "10px 14px", fontSize: "13px", color: C.red }}>{"\ud83d\udca1"} \u00d6verv\u00e4g l\u00e4ttare pass idag.</div>)}
+                {wAvg > 0 && wAvg < 3 && (<div style={{ marginTop: "10px", background: C.redDim, border: "1px solid " + C.redBorder, borderRadius: R.md, padding: "10px 14px", fontSize: "13px", color: C.red }}>{"💡"} Överväg lättare pass idag.</div>)}
               </div>)}
               <div style={sectionTitle}>{isLogToday ? "Dagens pass" : "Pass " + new Date(logDate).toLocaleDateString("sv-SE", { weekday: "long", day: "numeric", month: "long" })}</div>
-              <div style={sectionSub}>Klicka f\u00f6r att logga eller se detaljer</div>
+              <div style={sectionSub}>Klicka för att logga eller se detaljer</div>
               {selDaySessions.filter(function(s) { return s.type !== "rest" && !s.cancelled; }).map(function(sess) {
                 var lk = logDate + "-" + sess.id, logged = tLogs[lk];
                 return (<div key={sess.id} onClick={function() {
@@ -499,25 +499,25 @@ export default function BadmintonTrainingApp() {
                 }} style={Object.assign({}, cardStyle, { display: "flex", alignItems: "center", gap: "12px", cursor: "pointer", background: logged ? C.greenDim : C.bgCard, border: logged ? "1px solid " + C.greenBorder : "1px solid " + C.borderLight })}>
                   <div style={{ width: "10px", height: "10px", borderRadius: "50%", flexShrink: 0, background: sess.type === "badminton" ? C.green : C.accent }} />
                   <div style={{ flex: 1 }}><div style={{ fontSize: "15px", fontWeight: 500 }}>{sess.label}</div><div style={{ fontSize: "12px", color: C.textMuted, marginTop: "2px" }}>{sess.time}</div></div>
-                  {logged ? (<div style={{ display: "flex", alignItems: "center", gap: "8px" }}><span style={{ fontSize: "13px", color: C.green, fontWeight: 600 }}>{"\u2713"} Loggat</span>{logged.rating > 0 && <span style={{ fontSize: "13px", color: C.accent, fontWeight: 600 }}>{"\u2605"}{logged.rating}</span>}</div>) : (<div style={{ fontSize: "13px", color: C.accent, fontWeight: 500 }}>Logga {"\u2192"}</div>)}
+                  {logged ? (<div style={{ display: "flex", alignItems: "center", gap: "8px" }}><span style={{ fontSize: "13px", color: C.green, fontWeight: 600 }}>{"✓"} Loggat</span>{logged.rating > 0 && <span style={{ fontSize: "13px", color: C.accent, fontWeight: 600 }}>{"★"}{logged.rating}</span>}</div>) : (<div style={{ fontSize: "13px", color: C.accent, fontWeight: 500 }}>Logga {"→"}</div>)}
                 </div>);
               })}
               {selDaySessions.some(function(s) { return s.type === "gym" && !s.cancelled; }) && isLogToday && (<div style={{ marginTop: "20px" }}>
                 <div style={sectionTitle}>Gympass</div>
-                <div style={sectionSub}>{isTaper ? "\u26a1 T\u00e4vlingsvecka: 60% vikt" : "Logga vikter"}</div>
+                <div style={sectionSub}>{isTaper ? "⚡ Tävlingsvecka: 60% vikt" : "Logga vikter"}</div>
                 <GymLog exercises={GYM_EXERCISES} log={todayGym} setLog={function(fn) { var u = typeof fn === "function" ? fn(todayGym) : fn; var g = Object.assign({}, gLogs); g[today] = u; setGLogs(g); }} />
               </div>)}
             </div>);
           })()}
           {logSess && (<div style={modalOverlay} onClick={function() { setLogSess(null); }}><div onClick={function(e) { e.stopPropagation(); }} style={modalBox}>
             <div style={sectionTitle}>Logga: {logSess.label}</div>
-            <div style={Object.assign({}, sectionSub, { marginBottom: "18px" })}>{logSess.time}{logSess._logDate && logSess._logDate !== today && (<span style={{ color: C.accent, marginLeft: "8px" }}>{"\u2022"} {new Date(logSess._logDate).toLocaleDateString("sv-SE", { weekday: "short", day: "numeric", month: "short" })}</span>)}</div>
+            <div style={Object.assign({}, sectionSub, { marginBottom: "18px" })}>{logSess.time}{logSess._logDate && logSess._logDate !== today && (<span style={{ color: C.accent, marginLeft: "8px" }}>{"•"} {new Date(logSess._logDate).toLocaleDateString("sv-SE", { weekday: "short", day: "numeric", month: "short" })}</span>)}</div>
             <div style={labelStyle}>Blev passet av?</div>
             <div style={{ display: "flex", gap: "8px", marginBottom: "18px" }}>
               {[{ v: "yes", l: "Ja", c: C.green }, { v: "partial", l: "Delvis", c: C.yellow }, { v: "no", l: "Nej", c: C.red }].map(function(o) { return <button key={o.v} onClick={function() { setLogForm(Object.assign({}, logForm, { completed: o.v })); }} style={chipStyle(logForm.completed === o.v, o.c)}>{o.l}</button>; })}
             </div>
             {logSess.type === "badminton" && (<div>
-              <div style={labelStyle}>Typ av tr\u00e4ning</div>
+              <div style={labelStyle}>Typ av träning</div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "18px" }}>
                 {TRAINING_TYPES.map(function(t) { var ttArr = Array.isArray(logForm.trainingType) ? logForm.trainingType : []; var sel = ttArr.indexOf(t) !== -1;
                   return <button key={t} onClick={function() { setLogForm(Object.assign({}, logForm, { trainingType: sel ? ttArr.filter(function(x){return x!==t;}) : ttArr.concat([t]) })); }} style={chipStyle(sel, C.blue)}>{t}</button>; })}
@@ -525,7 +525,7 @@ export default function BadmintonTrainingApp() {
             </div>)}
             <div style={labelStyle}>Egen insats</div>
             <div style={{ display: "flex", gap: "6px", marginBottom: "18px" }}>{[1,2,3,4,5].map(function(v) { return <button key={v} onClick={function() { setLogForm(Object.assign({}, logForm, { rating: v })); }} style={ratingBtnStyle(logForm.rating === v, v)}>{v}</button>; })}</div>
-            <div style={labelStyle}>Energiniv\u00e5</div>
+            <div style={labelStyle}>Energinivå</div>
             <div style={{ display: "flex", gap: "6px", marginBottom: "18px" }}>{[1,2,3,4,5].map(function(v) { return <button key={v} onClick={function() { setLogForm(Object.assign({}, logForm, { energy: v })); }} style={ratingBtnStyle(logForm.energy === v, v)}>{v}</button>; })}</div>
             <div style={labelStyle}>Anteckning</div>
             <textarea value={logForm.note} onChange={function(e) { setLogForm(Object.assign({}, logForm, { note: e.target.value })); }} placeholder="Valfritt..." style={Object.assign({}, inputStyle, { height: "70px", resize: "none", marginBottom: "18px" })} />
@@ -546,33 +546,33 @@ export default function BadmintonTrainingApp() {
             <div style={sectionTitle}>Statistik</div>
             <PeriodFilter />
             <div style={{ display: "flex", gap: "6px", marginBottom: "20px", flexWrap: "wrap" }}>
-              {[{ v: "badminton", l: "Badminton", c: C.green }, { v: "gym", l: "Gym", c: C.accent }, { v: "series", l: "Seriespel", c: C.blue }, { v: "tournament", l: "T\u00e4vlingar", c: C.red }].map(function(t) { return <button key={t.v} onClick={function() { setStatsTab(t.v); }} style={Object.assign({}, chipStyle(statsTab === t.v, t.c), { fontSize: "12px" })}>{t.l}</button>; })}
+              {[{ v: "badminton", l: "Badminton", c: C.green }, { v: "gym", l: "Gym", c: C.accent }, { v: "series", l: "Seriespel", c: C.blue }, { v: "tournament", l: "Tävlingar", c: C.red }].map(function(t) { return <button key={t.v} onClick={function() { setStatsTab(t.v); }} style={Object.assign({}, chipStyle(statsTab === t.v, t.c), { fontSize: "12px" })}>{t.l}</button>; })}
             </div>
             {statsTab === "badminton" && (<div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "18px" }}>
-                <StatCard label="Tr\u00e4ningar" value={badLogs.length} color={C.green} />
-                <StatCard label="Genomf\u00f6rda" value={badLogs.filter(function(l){return l.completed==="yes";}).length} color={C.blue} />
-                <StatCard label="Snittinsats" value={badLogs.length > 0 ? (badLogs.reduce(function(s,l){return s+(l.rating||0);},0)/badLogs.length).toFixed(1) : "\u2014"} color={C.accent} />
-                <StatCard label="Snittenergi" value={badLogs.length > 0 ? (badLogs.reduce(function(s,l){return s+(l.energy||0);},0)/badLogs.length).toFixed(1) : "\u2014"} color={C.purple} />
+                <StatCard label="Träningar" value={badLogs.length} color={C.green} />
+                <StatCard label="Genomförda" value={badLogs.filter(function(l){return l.completed==="yes";}).length} color={C.blue} />
+                <StatCard label="Snittinsats" value={badLogs.length > 0 ? (badLogs.reduce(function(s,l){return s+(l.rating||0);},0)/badLogs.length).toFixed(1) : "—"} color={C.accent} />
+                <StatCard label="Snittenergi" value={badLogs.length > 0 ? (badLogs.reduce(function(s,l){return s+(l.energy||0);},0)/badLogs.length).toFixed(1) : "—"} color={C.purple} />
               </div>
               {(function() {
                 var tc = {}; badLogs.forEach(function(l) { var tt = Array.isArray(l.trainingType) ? l.trainingType : (l.trainingType ? [l.trainingType] : []); tt.forEach(function(t) { tc[t] = (tc[t]||0) + 1; }); });
                 var total = Object.values(tc).reduce(function(s,c){return s+c;}, 0);
                 if (total === 0) return null;
-                return (<div style={{ marginBottom: "18px" }}><div style={Object.assign({}, labelStyle, { marginBottom: "10px" })}>Tr\u00e4ningstyper</div>
+                return (<div style={{ marginBottom: "18px" }}><div style={Object.assign({}, labelStyle, { marginBottom: "10px" })}>Träningstyper</div>
                   {Object.entries(tc).sort(function(a,b){return b[1]-a[1];}).map(function(e) { var pct = Math.round(e[1]/total*100);
                     return (<div key={e[0]} style={{ marginBottom: "10px" }}><div style={{ display: "flex", justifyContent: "space-between", marginBottom: "4px" }}><span style={{ fontSize: "13px" }}>{e[0]}</span><span style={{ fontSize: "13px", color: C.textMuted }}>{e[1]}st ({pct}%)</span></div>
                       <div style={{ height: "6px", background: C.bgElevated, borderRadius: "3px", overflow: "hidden" }}><div style={{ width: pct+"%", height: "100%", background: C.green, borderRadius: "3px" }} /></div></div>);
                   })}</div>);
               })()}
-              {badLogs.length === 0 && <div style={{ textAlign: "center", padding: "40px 0", color: C.textDim, fontSize: "14px" }}>Ingen badmintondata f\u00f6r vald period</div>}
+              {badLogs.length === 0 && <div style={{ textAlign: "center", padding: "40px 0", color: C.textDim, fontSize: "14px" }}>Ingen badmintondata för vald period</div>}
             </div>)}
             {statsTab === "gym" && (<div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginBottom: "18px" }}>
                 <StatCard label="Gympass" value={gymLogs2.length} color={C.accent} />
-                <StatCard label="Genomf\u00f6rda" value={gymLogs2.filter(function(l){return l.completed==="yes";}).length} color={C.green} />
+                <StatCard label="Genomförda" value={gymLogs2.filter(function(l){return l.completed==="yes";}).length} color={C.green} />
               </div>
-              {gymLogs2.length === 0 && <div style={{ textAlign: "center", padding: "40px 0", color: C.textDim, fontSize: "14px" }}>Ingen gymdata f\u00f6r vald period</div>}
+              {gymLogs2.length === 0 && <div style={{ textAlign: "center", padding: "40px 0", color: C.textDim, fontSize: "14px" }}>Ingen gymdata för vald period</div>}
             </div>)}
             {(statsTab === "series" || statsTab === "tournament") && (function() {
               var matches = statsTab === "series" ? seriesM : tournM; var mst = ms(matches);
@@ -580,7 +580,7 @@ export default function BadmintonTrainingApp() {
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "10px", marginBottom: "18px" }}>
                   <StatCard label="Matcher" value={mst.total} color={statsTab === "series" ? C.blue : C.red} />
                   <StatCard label="Vinster" value={mst.won} color={C.green} />
-                  <StatCard label="F\u00f6rluster" value={mst.lost} color={C.red} />
+                  <StatCard label="Förluster" value={mst.lost} color={C.red} />
                 </div>
                 {MATCH_TYPES.map(function(mt) { var m = mst.byType[mt]; if (m.length === 0) return null; var w = m.filter(function(x){return x.won===true||x.won==="true";}).length;
                   return (<div key={mt} style={{ marginBottom: "10px" }}><div style={{ display: "flex", justifyContent: "space-between", fontSize: "13px", color: C.textSecondary, marginBottom: "4px" }}><span>{mt}</span><span>{w}V / {m.length-w}F</span></div>
@@ -589,10 +589,10 @@ export default function BadmintonTrainingApp() {
                 {matches.length > 0 && (<div style={{ marginTop: "18px" }}><div style={Object.assign({}, labelStyle, { marginBottom: "10px" })}>Matchhistorik</div>
                   {matches.slice().reverse().map(function(m, i) { var setStr = m.sets.filter(function(s){return s.my||s.opp;}).map(function(s){return s.my+"-"+s.opp;}).join(", ");
                     return (<div key={i} style={Object.assign({}, cardStyle, { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 14px" })}>
-                      <div><div style={{ fontSize: "13px" }}>{m.matchType} \u2014 {m.compName}</div><div style={{ fontSize: "11px", color: C.textMuted, marginTop: "2px" }}>{m.opponent ? "vs " + m.opponent + " \u2014 " : ""}{setStr}</div></div>
+                      <div><div style={{ fontSize: "13px" }}>{m.matchType} — {m.compName}</div><div style={{ fontSize: "11px", color: C.textMuted, marginTop: "2px" }}>{m.opponent ? "vs " + m.opponent + " — " : ""}{setStr}</div></div>
                       <div style={{ fontSize: "14px", fontWeight: 700, color: m.won ? C.green : C.red }}>{m.won ? "V" : "F"}</div></div>);
                   })}</div>)}
-                {mst.total === 0 && <div style={{ textAlign: "center", padding: "40px 0", color: C.textDim, fontSize: "14px" }}>Inga matcher f\u00f6r vald period</div>}
+                {mst.total === 0 && <div style={{ textAlign: "center", padding: "40px 0", color: C.textDim, fontSize: "14px" }}>Inga matcher för vald period</div>}
               </div>);
             })()}
           </div>);
@@ -603,19 +603,19 @@ export default function BadmintonTrainingApp() {
           var allLogsF = filterByPeriod(Object.values(tLogs), "date");
           return (<div>
             <div style={sectionTitle}>Insikter</div>
-            <div style={sectionSub}>Analyser baserade p\u00e5 din tr\u00e4ningsdata</div>
+            <div style={sectionSub}>Analyser baserade på din träningsdata</div>
             <PeriodFilter />
-            {allLogsF.length < 3 ? (<div style={{ textAlign: "center", padding: "40px 0", color: C.textDim, fontSize: "14px" }}>Beh\u00f6ver minst 3 loggade pass f\u00f6r vald period</div>) : (function() {
+            {allLogsF.length < 3 ? (<div style={{ textAlign: "center", padding: "40px 0", color: C.textDim, fontSize: "14px" }}>Behöver minst 3 loggade pass för vald period</div>) : (function() {
               var allLogs = allLogsF; var cards = [];
 
               // Sleep vs Performance
-              var slD = { g: [], b: [] }; allLogs.forEach(function(l) { var dw = gwfd(l.date); if (dw && dw["S\u00f6mn"]) { if (dw["S\u00f6mn"] >= 4) slD.g.push(l); else if (dw["S\u00f6mn"] <= 3) slD.b.push(l); } });
+              var slD = { g: [], b: [] }; allLogs.forEach(function(l) { var dw = gwfd(l.date); if (dw && dw["Sömn"]) { if (dw["Sömn"] >= 4) slD.g.push(l); else if (dw["Sömn"] <= 3) slD.b.push(l); } });
               var slM = slD.g.length + slD.b.length;
               if (slD.g.length >= 2 && slD.b.length >= 1) {
                 var gR = slD.g.reduce(function(s,l){return s+(l.rating||0);},0)/slD.g.length; var bR = slD.b.reduce(function(s,l){return s+(l.rating||0);},0)/slD.b.length;
                 var gE = slD.g.reduce(function(s,l){return s+(l.energy||0);},0)/slD.g.length; var bE = slD.b.reduce(function(s,l){return s+(l.energy||0);},0)/slD.b.length;
-                cards.push({ icon: "\ud83d\ude34", title: "S\u00f6mn vs Prestation", body: "Bra s\u00f6mn (4-5): insats " + gR.toFixed(1) + ", energi " + gE.toFixed(1) + " (" + slD.g.length + " pass). D\u00e5lig s\u00f6mn (1-3): insats " + bR.toFixed(1) + ", energi " + bE.toFixed(1) + " (" + slD.b.length + " pass).", highlight: (gR-bR>0.3||gE-bE>0.3) ? "Bra s\u00f6mn ger" + (gR-bR>0.3?" +"+(gR-bR).toFixed(1)+" insats":"") + (gR-bR>0.3&&gE-bE>0.3?" och":"") + (gE-bE>0.3?" +"+(gE-bE).toFixed(1)+" energi":"") + "!" : "S\u00f6mnen verkar inte p\u00e5verka prestationen.", color: (gR-bR>0.3||gE-bE>0.3) ? C.green : C.textMuted });
-              } else { cards.push({ icon: "\ud83d\ude34", title: "S\u00f6mn vs Prestation", body: "S\u00f6mndata matchad f\u00f6r " + slM + " av " + allLogs.length + " pass. Fyll i s\u00f6mn i daglig avst\u00e4mning.", highlight: "Beh\u00f6ver minst 2 pass med bra s\u00f6mn (4-5) och 1 med d\u00e5lig (1-3).", color: C.textMuted }); }
+                cards.push({ icon: "😴", title: "Sömn vs Prestation", body: "Bra sömn (4-5): insats " + gR.toFixed(1) + ", energi " + gE.toFixed(1) + " (" + slD.g.length + " pass). Dålig sömn (1-3): insats " + bR.toFixed(1) + ", energi " + bE.toFixed(1) + " (" + slD.b.length + " pass).", highlight: (gR-bR>0.3||gE-bE>0.3) ? "Bra sömn ger" + (gR-bR>0.3?" +"+(gR-bR).toFixed(1)+" insats":"") + (gR-bR>0.3&&gE-bE>0.3?" och":"") + (gE-bE>0.3?" +"+(gE-bE).toFixed(1)+" energi":"") + "!" : "Sömnen verkar inte påverka prestationen.", color: (gR-bR>0.3||gE-bE>0.3) ? C.green : C.textMuted });
+              } else { cards.push({ icon: "😴", title: "Sömn vs Prestation", body: "Sömndata matchad för " + slM + " av " + allLogs.length + " pass. Fyll i sömn i daglig avstämning.", highlight: "Behöver minst 2 pass med bra sömn (4-5) och 1 med dålig (1-3).", color: C.textMuted }); }
 
               // Single vs Double sessions
               var dsc = {}; allLogs.forEach(function(l) { if (!dsc[l.date]) dsc[l.date] = []; dsc[l.date].push(l); });
@@ -623,7 +623,7 @@ export default function BadmintonTrainingApp() {
               if (sngl.length >= 2 && dbl.length >= 2) {
                 var sR = sngl.reduce(function(s,l){return s+(l.rating||0);},0)/sngl.length; var dR = dbl.reduce(function(s,l){return s+(l.rating||0);},0)/dbl.length;
                 var sE = sngl.reduce(function(s,l){return s+(l.energy||0);},0)/sngl.length; var dE = dbl.reduce(function(s,l){return s+(l.energy||0);},0)/dbl.length;
-                cards.push({ icon: "\ud83d\udcca", title: "Enkelpass vs Dubbelpass-dagar", body: "Enkelpass (" + sngl.length + "): insats " + sR.toFixed(1) + ", energi " + sE.toFixed(1) + ". Dubbelpass (" + dbl.length + "): insats " + dR.toFixed(1) + ", energi " + dE.toFixed(1) + ".", highlight: dE < sE - 0.3 ? "Energin sjunker " + (sE-dE).toFixed(1) + " p\u00e5 dubbelpass-dagar" : "Energin h\u00e5ller bra p\u00e5 dubbelpass!", color: dE < sE - 0.3 ? C.yellow : C.green });
+                cards.push({ icon: "📊", title: "Enkelpass vs Dubbelpass-dagar", body: "Enkelpass (" + sngl.length + "): insats " + sR.toFixed(1) + ", energi " + sE.toFixed(1) + ". Dubbelpass (" + dbl.length + "): insats " + dR.toFixed(1) + ", energi " + dE.toFixed(1) + ".", highlight: dE < sE - 0.3 ? "Energin sjunker " + (sE-dE).toFixed(1) + " på dubbelpass-dagar" : "Energin håller bra på dubbelpass!", color: dE < sE - 0.3 ? C.yellow : C.green });
               }
 
               // Best/worst weekday
@@ -632,7 +632,7 @@ export default function BadmintonTrainingApp() {
               if (dent.length >= 3) {
                 dent.sort(function(a,b) { return (b[1].r.reduce(function(s,v){return s+v;},0)/b[1].r.length) - (a[1].r.reduce(function(s,v){return s+v;},0)/a[1].r.length); });
                 var bD = dent[0], wD = dent[dent.length-1]; var bA = bD[1].r.reduce(function(s,v){return s+v;},0)/bD[1].r.length; var wA = wD[1].r.reduce(function(s,v){return s+v;},0)/wD[1].r.length;
-                cards.push({ icon: "\ud83d\udcc5", title: "B\u00e4sta & s\u00e4msta dag", body: "B\u00e4st: " + bD[0] + " (" + bA.toFixed(1) + "). S\u00e4mst: " + wD[0] + " (" + wA.toFixed(1) + ").", highlight: bA-wA > 0.5 ? bD[0] + "ar ger " + (bA-wA).toFixed(1) + " h\u00f6gre insats!" : "Insatsen \u00e4r j\u00e4mn alla dagar.", color: bA-wA > 0.5 ? C.blue : C.textMuted });
+                cards.push({ icon: "📅", title: "Bästa & sämsta dag", body: "Bäst: " + bD[0] + " (" + bA.toFixed(1) + "). Sämst: " + wD[0] + " (" + wA.toFixed(1) + ").", highlight: bA-wA > 0.5 ? bD[0] + "ar ger " + (bA-wA).toFixed(1) + " högre insats!" : "Insatsen är jämn alla dagar.", color: bA-wA > 0.5 ? C.blue : C.textMuted });
                 cards.push({ type: "dayChart", data: dent.map(function(e) { return { day: e[0], avg: e[1].r.reduce(function(s,v){return s+v;},0)/e[1].r.length, count: e[1].r.length }; }) });
               }
 
@@ -640,24 +640,24 @@ export default function BadmintonTrainingApp() {
               var tr = {}; allLogs.forEach(function(l) { var tt = Array.isArray(l.trainingType)?l.trainingType:(l.trainingType?[l.trainingType]:[]); tt.forEach(function(t) { if (!tr[t]) tr[t] = []; if (l.rating) tr[t].push(l.rating); }); });
               var tent = Object.entries(tr).filter(function(e) { return e[1].length >= 2; });
               if (tent.length >= 2) { tent.sort(function(a,b) { return (b[1].reduce(function(s,v){return s+v;},0)/b[1].length) - (a[1].reduce(function(s,v){return s+v;},0)/a[1].length); });
-                cards.push({ icon: "\ud83c\udff8", title: "Tr\u00e4ningstyp vs Insats", body: tent.map(function(e) { return e[0] + ": " + (e[1].reduce(function(s,v){return s+v;},0)/e[1].length).toFixed(1) + " (" + e[1].length + " pass)"; }).join(". "), highlight: "B\u00e4st p\u00e5 " + tent[0][0] + "-pass!", color: C.green }); }
+                cards.push({ icon: "🏸", title: "Träningstyp vs Insats", body: tent.map(function(e) { return e[0] + ": " + (e[1].reduce(function(s,v){return s+v;},0)/e[1].length).toFixed(1) + " (" + e[1].length + " pass)"; }).join(". "), highlight: "Bäst på " + tent[0][0] + "-pass!", color: C.green }); }
 
               // Low energy warning
               var rl = allLogs.slice().sort(function(a,b){return new Date(b.date)-new Date(a.date);}).slice(0, 5);
               var lec = rl.filter(function(l) { return (l.energy||0) <= 2; }).length;
-              if (lec >= 3) cards.push({ icon: "\u26a0\ufe0f", title: "Belastningsvarning", body: lec + " av senaste 5 passen hade l\u00e5g energi.", highlight: "\u00d6verv\u00e4g extra vila.", color: C.red });
+              if (lec >= 3) cards.push({ icon: "⚠️", title: "Belastningsvarning", body: lec + " av senaste 5 passen hade låg energi.", highlight: "Överväg extra vila.", color: C.red });
 
               // Fatigue
-              var fd = { hf: [], lf: [] }; allLogs.forEach(function(l) { var dw = gwfd(l.date); if (dw && dw["Muskeltr\u00f6tthet"]) { if (dw["Muskeltr\u00f6tthet"] <= 2) fd.hf.push(l); else if (dw["Muskeltr\u00f6tthet"] >= 4) fd.lf.push(l); } });
+              var fd = { hf: [], lf: [] }; allLogs.forEach(function(l) { var dw = gwfd(l.date); if (dw && dw["Muskeltrötthet"]) { if (dw["Muskeltrötthet"] <= 2) fd.hf.push(l); else if (dw["Muskeltrötthet"] >= 4) fd.lf.push(l); } });
               if (fd.hf.length >= 2 && fd.lf.length >= 2) { var hR = fd.hf.reduce(function(s,l){return s+(l.rating||0);},0)/fd.hf.length; var lR = fd.lf.reduce(function(s,l){return s+(l.rating||0);},0)/fd.lf.length;
-                cards.push({ icon: "\ud83d\udcaa", title: "Muskeltr\u00f6tthet vs Insats", body: "Utvilad: " + lR.toFixed(1) + ". Tr\u00f6tt: " + hR.toFixed(1) + ".", highlight: lR-hR > 0.3 ? "Vila ger +" + (lR-hR).toFixed(1) + " insats!" : "Presterar bra \u00e4ven tr\u00f6tt!", color: lR-hR > 0.3 ? C.green : C.blue }); }
+                cards.push({ icon: "💪", title: "Muskeltrötthet vs Insats", body: "Utvilad: " + lR.toFixed(1) + ". Trött: " + hR.toFixed(1) + ".", highlight: lR-hR > 0.3 ? "Vila ger +" + (lR-hR).toFixed(1) + " insats!" : "Presterar bra även trött!", color: lR-hR > 0.3 ? C.green : C.blue }); }
 
               // Motivation
               var mvd = { hm: [], lm: [] }; allLogs.forEach(function(l) { var dw = gwfd(l.date); if (dw && dw["Motivation"]) { if (dw["Motivation"] >= 4) mvd.hm.push(l); else if (dw["Motivation"] <= 2) mvd.lm.push(l); } });
               if (mvd.hm.length >= 2 && mvd.lm.length >= 1) { var hmR = mvd.hm.reduce(function(s,l){return s+(l.rating||0);},0)/mvd.hm.length; var lmR = mvd.lm.reduce(function(s,l){return s+(l.rating||0);},0)/mvd.lm.length;
-                cards.push({ icon: "\ud83e\udde0", title: "Motivation vs Insats", body: "H\u00f6g: " + hmR.toFixed(1) + " (" + mvd.hm.length + " pass). L\u00e5g: " + lmR.toFixed(1) + " (" + mvd.lm.length + " pass).", highlight: hmR-lmR > 0.3 ? "Motivation ger +" + (hmR-lmR).toFixed(1) + " insats!" : "Levererar oavsett motivation \u2014 starkt!", color: hmR-lmR > 0.3 ? C.purple : C.green }); }
+                cards.push({ icon: "🧠", title: "Motivation vs Insats", body: "Hög: " + hmR.toFixed(1) + " (" + mvd.hm.length + " pass). Låg: " + lmR.toFixed(1) + " (" + mvd.lm.length + " pass).", highlight: hmR-lmR > 0.3 ? "Motivation ger +" + (hmR-lmR).toFixed(1) + " insats!" : "Levererar oavsett motivation — starkt!", color: hmR-lmR > 0.3 ? C.purple : C.green }); }
 
-              if (cards.length === 0) return (<div style={{ textAlign: "center", padding: "40px 0", color: C.textDim }}>Logga fler pass och fyll i avst\u00e4mning</div>);
+              if (cards.length === 0) return (<div style={{ textAlign: "center", padding: "40px 0", color: C.textDim }}>Logga fler pass och fyll i avstämning</div>);
               return (<div>{cards.map(function(c, i) { return <InsightCard key={i} {...c} />; })}</div>);
             })()}
           </div>);
@@ -666,17 +666,17 @@ export default function BadmintonTrainingApp() {
         {/* CALENDAR TAB */}
         {activeTab === "calendar" && (<div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "18px" }}>
-            <div><div style={sectionTitle}>T\u00e4vlingskalender</div><div style={sectionSub}>Tryck p\u00e5 t\u00e4vling f\u00f6r att logga matcher</div></div>
-            <button onClick={function() { setShowAddComp(!showAddComp); }} style={{ width: "40px", height: "40px", borderRadius: R.md, border: "1px solid rgba(245,183,49,0.3)", background: showAddComp ? C.accentDim : "transparent", color: C.accent, fontSize: "22px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{showAddComp ? "\u00d7" : "+"}</button>
+            <div><div style={sectionTitle}>Tävlingskalender</div><div style={sectionSub}>Tryck på tävling för att logga matcher</div></div>
+            <button onClick={function() { setShowAddComp(!showAddComp); }} style={{ width: "40px", height: "40px", borderRadius: R.md, border: "1px solid rgba(245,183,49,0.3)", background: showAddComp ? C.accentDim : "transparent", color: C.accent, fontSize: "22px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{showAddComp ? "×" : "+"}</button>
           </div>
           {showAddComp && (<div style={Object.assign({}, cardStyle, { border: "1px solid rgba(245,183,49,0.15)", marginBottom: "18px" })}>
             <input type="text" placeholder="Namn" value={newComp.name} onChange={function(e) { setNewComp(Object.assign({}, newComp, { name: e.target.value })); }} style={Object.assign({}, inputStyle, { marginBottom: "10px" })} />
             <input type="date" value={newComp.date} onChange={function(e) { setNewComp(Object.assign({}, newComp, { date: e.target.value })); }} style={Object.assign({}, inputStyle, { marginBottom: "10px" })} />
             <div style={{ display: "flex", gap: "8px", marginBottom: "12px" }}>
-              <button onClick={function() { setNewComp(Object.assign({}, newComp, { type: "tournament" })); }} style={chipStyle(newComp.type === "tournament")}>T\u00e4vling {"\ud83c\udfc6"}</button>
-              <button onClick={function() { setNewComp(Object.assign({}, newComp, { type: "series" })); }} style={chipStyle(newComp.type === "series")}>Seriespel {"\ud83c\udff8"}</button>
+              <button onClick={function() { setNewComp(Object.assign({}, newComp, { type: "tournament" })); }} style={chipStyle(newComp.type === "tournament")}>Tävling {"🏆"}</button>
+              <button onClick={function() { setNewComp(Object.assign({}, newComp, { type: "series" })); }} style={chipStyle(newComp.type === "series")}>Seriespel {"🏸"}</button>
             </div>
-            <button onClick={function() { if (newComp.name && newComp.date) { setCompetitions(competitions.concat([Object.assign({}, newComp)])); setNewComp({ name: "", date: "", type: "tournament" }); setShowAddComp(false); } }} style={{ width: "100%", padding: "14px", borderRadius: R.md, border: "none", background: newComp.name && newComp.date ? C.accent : C.bgElevated, color: newComp.name && newComp.date ? "#000" : C.textDim, fontSize: "15px", fontWeight: 600, cursor: "pointer", fontFamily: font }}>L\u00e4gg till</button>
+            <button onClick={function() { if (newComp.name && newComp.date) { setCompetitions(competitions.concat([Object.assign({}, newComp)])); setNewComp({ name: "", date: "", type: "tournament" }); setShowAddComp(false); } }} style={{ width: "100%", padding: "14px", borderRadius: R.md, border: "none", background: newComp.name && newComp.date ? C.accent : C.bgElevated, color: newComp.name && newComp.date ? "#000" : C.textDim, fontSize: "15px", fontWeight: 600, cursor: "pointer", fontFamily: font }}>Lägg till</button>
           </div>)}
           {sortedComps.map(function(comp, i) {
             var d = daysUntil(comp.date), isPast = d < 0, isNext = comp === nextComp;
@@ -686,7 +686,7 @@ export default function BadmintonTrainingApp() {
                 display: "flex", alignItems: "center", gap: "14px", cursor: "pointer", borderRadius: compM.length > 0 ? R.lg + " " + R.lg + " 0 0" : R.lg,
                 background: isNext ? C.accentDim : C.bgCard, border: isNext ? "1px solid rgba(245,183,49,0.25)" : "1px solid " + C.borderLight, opacity: isPast && compM.length === 0 ? 0.4 : 1, marginBottom: 0,
               })}>
-                <div style={{ width: "48px", height: "48px", borderRadius: R.md, background: comp.type === "tournament" ? C.redDim : C.blueDim, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", flexShrink: 0 }}>{comp.type === "tournament" ? "\ud83c\udfc6" : "\ud83c\udff8"}</div>
+                <div style={{ width: "48px", height: "48px", borderRadius: R.md, background: comp.type === "tournament" ? C.redDim : C.blueDim, display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", flexShrink: 0 }}>{comp.type === "tournament" ? "🏆" : "🏸"}</div>
                 <div style={{ flex: 1 }}>
                   <div style={{ fontSize: "15px", fontWeight: 600 }}>{comp.name}</div>
                   <div style={{ fontSize: "12px", color: C.textMuted, marginTop: "3px" }}>{new Date(comp.date).toLocaleDateString("sv-SE", { weekday: "short", day: "numeric", month: "short" })}</div>
@@ -694,7 +694,7 @@ export default function BadmintonTrainingApp() {
                 <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                   {compM.length > 0 && <span style={{ fontSize: "12px", color: C.blue, fontWeight: 500 }}>{compM.length} matcher</span>}
                   <div style={{ fontSize: "13px", fontWeight: 600, color: isPast ? C.textDim : d <= 7 ? C.accent : C.textMuted }}>{isPast ? "Klar" : d + "d"}</div>
-                  <button onClick={function(e) { e.stopPropagation(); setCompetitions(competitions.filter(function(c) { return c !== comp; })); }} style={{ width: "28px", height: "28px", borderRadius: R.sm, border: "none", background: C.redDim, color: C.red, fontSize: "16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{"\u00d7"}</button>
+                  <button onClick={function(e) { e.stopPropagation(); setCompetitions(competitions.filter(function(c) { return c !== comp; })); }} style={{ width: "28px", height: "28px", borderRadius: R.sm, border: "none", background: C.redDim, color: C.red, fontSize: "16px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>{"×"}</button>
                 </div>
               </div>
               {compM.length > 0 && (<div style={{ background: C.bgElevated, borderRadius: "0 0 " + R.lg + " " + R.lg, padding: "10px 16px", borderTop: "1px solid " + C.borderLight }}>
@@ -714,23 +714,23 @@ export default function BadmintonTrainingApp() {
             <div style={{ display: "flex", gap: "8px", marginBottom: "18px" }}>
               {MATCH_TYPES.map(function(t) { return <button key={t} onClick={function() { setMatchForm(Object.assign({}, matchForm, { matchType: t })); }} style={chipStyle(matchForm.matchType === t, C.blue)}>{t}</button>; })}
             </div>
-            <div style={labelStyle}>Motst\u00e5ndare</div>
+            <div style={labelStyle}>Motståndare</div>
             <input type="text" placeholder="Namn (valfritt)" value={matchForm.opponent} onChange={function(e) { setMatchForm(Object.assign({}, matchForm, { opponent: e.target.value })); }} style={Object.assign({}, inputStyle, { marginBottom: "18px" })} />
-            <div style={labelStyle}>Set (b\u00e4st av 3)</div>
+            <div style={labelStyle}>Set (bäst av 3)</div>
             {[0, 1, 2].map(function(si) {
               return (<div key={si} style={{ display: "flex", gap: "10px", alignItems: "center", marginBottom: "8px" }}>
                 <span style={{ fontSize: "13px", color: C.textMuted, width: "42px" }}>Set {si + 1}</span>
                 <input type="number" placeholder="Du" value={matchForm.sets[si].my} onChange={function(e) { var s = matchForm.sets.slice(); s[si] = Object.assign({}, s[si], { my: e.target.value }); setMatchForm(Object.assign({}, matchForm, { sets: s })); }}
                   style={{ width: "65px", padding: "8px", borderRadius: R.sm, border: "1px solid " + C.border, background: C.bgInput, color: C.text, fontSize: "15px", textAlign: "center", fontFamily: font, outline: "none" }} />
-                <span style={{ color: C.textDim }}>{"\u2014"}</span>
+                <span style={{ color: C.textDim }}>{"—"}</span>
                 <input type="number" placeholder="Motst." value={matchForm.sets[si].opp} onChange={function(e) { var s = matchForm.sets.slice(); s[si] = Object.assign({}, s[si], { opp: e.target.value }); setMatchForm(Object.assign({}, matchForm, { sets: s })); }}
                   style={{ width: "65px", padding: "8px", borderRadius: R.sm, border: "1px solid " + C.border, background: C.bgInput, color: C.text, fontSize: "15px", textAlign: "center", fontFamily: font, outline: "none" }} />
               </div>);
             })}
             <div style={Object.assign({}, labelStyle, { marginTop: "14px" })}>Resultat</div>
             <div style={{ display: "flex", gap: "8px", marginBottom: "18px" }}>
-              <button onClick={function() { setMatchForm(Object.assign({}, matchForm, { won: true })); }} style={chipStyle(matchForm.won === true, C.green)}>Vinst {"\u2713"}</button>
-              <button onClick={function() { setMatchForm(Object.assign({}, matchForm, { won: false })); }} style={chipStyle(matchForm.won === false, C.red)}>F\u00f6rlust {"\u2717"}</button>
+              <button onClick={function() { setMatchForm(Object.assign({}, matchForm, { won: true })); }} style={chipStyle(matchForm.won === true, C.green)}>Vinst {"✓"}</button>
+              <button onClick={function() { setMatchForm(Object.assign({}, matchForm, { won: false })); }} style={chipStyle(matchForm.won === false, C.red)}>Förlust {"✗"}</button>
             </div>
             <button onClick={saveMatch} style={{ width: "100%", padding: "14px", borderRadius: R.md, border: "none", background: matchForm.won !== null ? C.green : C.bgElevated, color: matchForm.won !== null ? "#000" : C.textDim, fontSize: "16px", fontWeight: 700, cursor: "pointer", fontFamily: font }}>Spara match</button>
           </div></div>)}
@@ -743,20 +743,20 @@ export default function BadmintonTrainingApp() {
         <div style={Object.assign({}, sectionSub, { marginBottom: "18px" })}>{new Date(viewLog.displayDate || viewLog.date).toLocaleDateString("sv-SE", { weekday: "long", day: "numeric", month: "long" })}</div>
         <div style={labelStyle}>Status</div>
         <div style={{ fontSize: "15px", color: viewLog.completed === "yes" ? C.green : viewLog.completed === "partial" ? C.yellow : C.red, marginBottom: "16px", fontWeight: 600 }}>
-          {viewLog.completed === "yes" ? "\u2713 Genomf\u00f6rt" : viewLog.completed === "partial" ? "~ Delvis" : "\u2717 Inte genomf\u00f6rt"}
+          {viewLog.completed === "yes" ? "✓ Genomfört" : viewLog.completed === "partial" ? "~ Delvis" : "✗ Inte genomfört"}
         </div>
         {(function() { var tt = Array.isArray(viewLog.trainingType) ? viewLog.trainingType : (viewLog.trainingType ? [viewLog.trainingType] : []); if (tt.length === 0) return null;
-          return (<div><div style={labelStyle}>Tr\u00e4ningstyp</div><div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "16px" }}>
+          return (<div><div style={labelStyle}>Träningstyp</div><div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginBottom: "16px" }}>
             {tt.map(function(t) { return <span key={t} style={{ fontSize: "13px", color: C.blue, background: C.blueDim, padding: "4px 10px", borderRadius: "12px", fontWeight: 500 }}>{t}</span>; })}
           </div></div>);
         })()}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "16px" }}>
-          <div><div style={labelStyle}>Insats</div><div style={{ fontSize: "26px", fontWeight: 700, color: (viewLog.rating||0) >= 4 ? C.green : (viewLog.rating||0) >= 3 ? C.yellow : C.red }}>{viewLog.rating || "\u2014"}<span style={{ fontSize: "14px", color: C.textDim }}>/5</span></div></div>
-          <div><div style={labelStyle}>Energi</div><div style={{ fontSize: "26px", fontWeight: 700, color: (viewLog.energy||0) >= 4 ? C.green : (viewLog.energy||0) >= 3 ? C.yellow : C.red }}>{viewLog.energy || "\u2014"}<span style={{ fontSize: "14px", color: C.textDim }}>/5</span></div></div>
+          <div><div style={labelStyle}>Insats</div><div style={{ fontSize: "26px", fontWeight: 700, color: (viewLog.rating||0) >= 4 ? C.green : (viewLog.rating||0) >= 3 ? C.yellow : C.red }}>{viewLog.rating || "—"}<span style={{ fontSize: "14px", color: C.textDim }}>/5</span></div></div>
+          <div><div style={labelStyle}>Energi</div><div style={{ fontSize: "26px", fontWeight: 700, color: (viewLog.energy||0) >= 4 ? C.green : (viewLog.energy||0) >= 3 ? C.yellow : C.red }}>{viewLog.energy || "—"}<span style={{ fontSize: "14px", color: C.textDim }}>/5</span></div></div>
         </div>
         {viewLog.note && (<div><div style={labelStyle}>Anteckning</div><div style={{ fontSize: "14px", color: C.textSecondary, background: C.bgElevated, padding: "12px 14px", borderRadius: R.md, marginBottom: "16px", fontStyle: "italic", lineHeight: 1.5 }}>{viewLog.note}</div></div>)}
         <button onClick={function() { if (window.confirm("Ta bort denna logg?")) { var k = (viewLog.displayDate || viewLog.date) + "-" + viewLog.sessionId; var nl = Object.assign({}, tLogs); delete nl[k]; setTLogs(nl); setViewLog(null); } }} style={{ width: "100%", padding: "14px", borderRadius: R.md, border: "1px solid " + C.redBorder, background: C.redDim, color: C.red, fontSize: "14px", cursor: "pointer", fontFamily: font, fontWeight: 600, marginBottom: "8px" }}>Ta bort logg</button>
-        <button onClick={function() { setViewLog(null); }} style={{ width: "100%", padding: "14px", borderRadius: R.md, border: "1px solid " + C.border, background: "transparent", color: C.textMuted, fontSize: "14px", cursor: "pointer", fontFamily: font }}>St\u00e4ng</button>
+        <button onClick={function() { setViewLog(null); }} style={{ width: "100%", padding: "14px", borderRadius: R.md, border: "1px solid " + C.border, background: "transparent", color: C.textMuted, fontSize: "14px", cursor: "pointer", fontFamily: font }}>Stäng</button>
       </div></div>)}
 
       {/* MOTIVATION TOAST */}
